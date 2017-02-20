@@ -20,9 +20,9 @@ $RECYCLE.BIN/
 #############
 ## Arduino
 #############
-.with_bootloader.standard.hex
+*.with_bootloader.standard.hex
 
 #############
 ## Proteus
 #############
-.pdsbak
+*.pdsbak
