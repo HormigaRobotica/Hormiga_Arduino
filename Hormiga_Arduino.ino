@@ -34,6 +34,7 @@ void setup() {
 void loop() {
 	// put your main code here, to run repeatedly:
 	motor1.step(1);
+  motor2.step(1);
 	Serial.print("pasos:");
 	Serial.println(stepCount);
 	stepCount++;
