@@ -1,0 +1,39 @@
+# Auto detectar archivos de texto y realizar normalizacion LF
+* text=auto
+
+# Standar para msysgit
+*.doc	diff=astextplain
+*.DOC	diff=astextplain
+*.docx	diff=astextplain
+*.DOCX	diff=astextplain
+*.dot	diff=astextplain
+*.DOT	diff=astextplain
+*.pdf	diff=astextplain
+*.PDF	diff=astextplain
+*.rtf	diff=astextplain
+*.RTF	diff=astextplain
+
+# Archivos Binarios
+*.a       binary
+*.afm     binary
+*.bmp     binary
+*.dat     binary
+*.dbf     binary
+*.exe     binary
+*.frm     binary
+*.gif     binary
+*.hex	  binary
+*.icns    binary
+*.ico     binary
+*.jpg     binary
+*.lbl     binary
+*.lib     binary
+*.mdb     binary
+*.ng      binary
+*.odt     binary
+*.pdsprj  binary
+*.pdsbak  binary
+*.pfb     binary
+*.png     binary
+*.sq3     binary
+*.tif     binary
