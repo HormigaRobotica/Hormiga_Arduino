@@ -44,7 +44,7 @@ void loop() {
     irrecv.resume();
   }
   
-	motores.desp(1);//
+	motores.desp(1); //mueve los motores 1 desplazamiento
 
 	delay(500);
 }
