@@ -10,41 +10,41 @@
 * que recibe la posición de un objeto y se desplaza hacia el mismo una vez recibida esta información
 */
 
-#include <IRremote.h>
 #include "hormiga.h"
 
-#define PPR 48 // cambiar esto al numero de pasos por revolucion del motor a usar
-#define trigPin 12
-#define echoPin 13
-#define IRreadpin 5
-
-
-SincSteps motores(PPR, 11, 9, 10, 8, PPR, 4, 6, 5, 7);
+#define PPR1 48 //pasos por revolucion para motor 1
+#define PPR2 200 //pasos por revolucion para motor 2
+#define trigPin 12 //pin "Trigger" del sensor ultrasónico
+#define echoPin 13 //pin "Echo" del sensor ultrasónico
+#define IRreadpin 3 //pin para el receptor infrarrojo
+#define pinLDR A0 //pin del LDR del sensor de color
+#define dist 15 //distancia a considerar para obstaculos
+#define azucarRGB 255,255,255 //color del azucar
 
 //Stepper MP(STEPS, 11,9,10,8);
+SincSteps motores(PPR1, 11, 9, 10, 8, PPR2, 4, 6, 5, 7);
+HormigaSeguidora hormiga(
+  &motores,
+  pinLDR, 2, 1, 0,
+  dist,
+  new IRrecv(IRreadpin),
+  trigPin, echoPin,
+  azucarRGB);
 
 float resultados;
 
-IRrecv irrecv(IRreadpin);
-decode_results results;
-
 void setup() {
-	// Código a ejecutarse solo una vez
-	Serial.begin(9600);
-  irrecv.enableIRIn();
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
+  Serial.begin(9600);
+  hormiga.enableIR();
 }
 
 void loop() {
-  if (irrecv.decode(&results)) {
-    resultados = *reinterpret_cast<float*>(&results.value);
+  if (hormiga.chkIR()) {
     Serial.print("resultados: ");
-    Serial.println(resultados, 4);
-    irrecv.resume();
+    Serial.println(hormiga.getDatIR(), 4);
   }
   
-	motores.desp(1); //mueve los motores 1 desplazamiento
+	//motores.desp(1);
 
-	delay(500);
+	delay(100);
 }

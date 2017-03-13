@@ -10,7 +10,7 @@
 * que busca un objeto especifico, y al localizarlo,
 * avisa a una segunda hormiga de la localización de este.
 */
-#include <IRremote.h>
+
 #include "hormiga.h"
 
 #define PPR 48 // cambiar esto al numero de pasos por revolucion del motor a usar
@@ -34,5 +34,5 @@ void loop() {
   
   motores.desp(1); //mueve los motores 1 desplazamiento
 
-  delay(1000);
+  delay(5000);
 }

@@ -17,6 +17,10 @@ $RECYCLE.BIN/
 # Mac crap
 .DS_Store
 
+# executable files
+*.exe
+*.bat
+
 #############
 ## Arduino
 #############
