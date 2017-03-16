@@ -14,21 +14,16 @@
 Hormiga::Hormiga(
 	SincSteps* despl,
 	byte trigPin, byte echoPin, int dist,
-	byte pinLDR, byte rgbLEDPin1, byte rgbLEDPin2, byte rgbLEDPin3,
-	int r, int g, int b) :
+	byte pinTransistorCNY, byte pinLEDCNY,
+	int color) :
 
 	despl(despl),
 	trigPin(trigPin), echoPin(echoPin), dist(dist),
-	pinLDR(pinLDR)
+	pinTransistorCNY(pinTransistorCNY), pinLEDCNY(pinLEDCNY), color(color)
 {
-  rgbLEDsPins[0] = rgbLEDPin1;
-  rgbLEDsPins[1] = rgbLEDPin2;
-  rgbLEDsPins[2] = rgbLEDPin3;
-  rgb[0] = r;
-  rgb[1] = g;
-  rgb[2] = b;
 	pinMode(trigPin, OUTPUT);
 	pinMode(echoPin, INPUT);
+  colorTol = 2;
 }
 
 //mide la distancia entre el ultrasonico y un obstáculo
@@ -43,23 +38,34 @@ float Hormiga::Ultrasonico(){
 	return (((pulseIn(echoPin, HIGH) / 2) * 0.03438) -1);
 }
 
+//calibra el color a reconocer como azucar
+void Hormiga::calColor(){
+  color = analogRead(pinTransistorCNY);
+}
+
+//establece la tolerancia para el sensor de color (por defecto = +-2)
+void Hormiga::toleranciaColor(int colorTol){
+	this->colorTol = colorTol;
+}
+
+//***************************************************************************************************
+
 HormigaSeguidora::HormigaSeguidora(SincSteps* sinc, //puntero a la instancia para la sinsronización de los motores
-	byte LDRPin, //pin para LDR del sensor de color
-	byte rgbLEDPin1, byte rgbLEDPin2, byte rgbLEDPin3, //pines para los LEDs del sensor de color
+	byte pinTransistorCNY, byte pinLEDCNY, //pines del transistor y el LED del sensor de color
 	int distObstaculo, //distancia a la cual se evitan los obstaculos
 	IRrecv* IRRead, //lector del sensor infrarrojo
 	byte UltrasTrigPin, //Pin "Trigger" del sensor ultrasónico
 	byte UltrasEchoPin, //Pin "Echo" del sensor ultrasónico
-	int r, int g, int b) : /*color a considerar como "azucar")*/
+	int color) : //color a considerar como "azucar"
 
-	Hormiga(sinc, UltrasTrigPin, UltrasEchoPin, distObstaculo, LDRPin, rgbLEDPin1, rgbLEDPin2, rgbLEDPin3, r, g, b),
+	Hormiga(sinc, UltrasTrigPin, UltrasEchoPin, distObstaculo, pinTransistorCNY, pinLEDCNY, color),
 	IRRead(IRRead),
 	IRRes(new decode_results)
 {
 }
 
 bool HormigaSeguidora::chkIR(){
-	if (IRRead->decode(IRRes)) {
+	if (IRRead->decode(IRRes)){
 		datosIR = *reinterpret_cast<float*>(&IRRes->value);
 		IRRead->resume();
 		return true;
@@ -69,3 +75,23 @@ bool HormigaSeguidora::chkIR(){
 
 float HormigaSeguidora::getDatIR(){ return datosIR; }
 void HormigaSeguidora::enableIR(){ IRRead->enableIRIn(); }
+
+//***************************************************************************************************
+
+HormigaExploradora::HormigaExploradora(SincSteps* sinc, //puntero a la instancia para la sinsronización de los motores
+	byte pinTransistorCNY, byte pinLEDCNY, //pines del transistor y el LED del sensor de color
+	int distObstaculo, //distancia a la cual se evitan los obstaculos
+	byte UltrasTrigPin, //Pin "Trigger" del sensor ultrasónico
+	byte UltrasEchoPin, //Pin "Echo" del sensor ultrasónico
+	int color) : //color a considerar como "azucar"
+
+	Hormiga(sinc, UltrasTrigPin, UltrasEchoPin, distObstaculo, pinTransistorCNY, pinLEDCNY, color)
+{
+}
+
+void HormigaExploradora::enviarIR(float datos){
+	for (int i = 0; i < 3; i++) {
+		irsend.sendSony(*reinterpret_cast<unsigned long*>(&datos), 32); // Sony TV power code
+		delay(100);
+	}
+}

@@ -110,3 +110,9 @@ void SincSteps::revInv(long nRev){
 int SincSteps::getPasosDesp(byte nMotor){
   return (nMotor == 0) ? pasosDesp[0] : pasosDesp[1];
 }
+
+//establece la velocidad de los motores
+void SincSteps::setSpeed(unsigned long rpms){
+  motor[0]->setSpeed(rpms);
+  motor[1]->setSpeed(rpms);
+}

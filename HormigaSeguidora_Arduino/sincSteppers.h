@@ -63,6 +63,7 @@ class SincSteps{
     void despInv(long nDesp); //rota cada uno de los motores en direcciones opuestas hasta llegar al desplazamiento requerido
     void revInv(long nRev); //rota los motores en direcciones opuestas vueltas completas
     int getPasosDesp(byte nMotor); //retorna el numero de pasos para que el motor referenciado por "nMotor" de 1 desplazamiento
+    void setSpeed(unsigned long rpms); //establece la velocidad de los motores
     
   private:
     Stepper *motor[2];

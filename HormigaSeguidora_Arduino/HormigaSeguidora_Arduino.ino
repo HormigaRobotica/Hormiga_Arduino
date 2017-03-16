@@ -17,15 +17,16 @@
 #define trigPin 12 //pin "Trigger" del sensor ultrasónico
 #define echoPin 13 //pin "Echo" del sensor ultrasónico
 #define IRreadpin 3 //pin para el receptor infrarrojo
-#define pinLDR A0 //pin del LDR del sensor de color
+#define transistorCNY A0 //pin del transistor del sensor de color
+#define LED_CNY 2 //pin del LED infrarrojo del sensor de color
 #define dist 15 //distancia a considerar para obstaculos
-#define azucarRGB 255,255,255 //color del azucar
+#define azucarRGB 255.0 //color del azucar
 
 //Stepper MP(STEPS, 11,9,10,8);
 SincSteps motores(PPR1, 11, 9, 10, 8, PPR2, 4, 6, 5, 7);
 HormigaSeguidora hormiga(
   &motores,
-  pinLDR, 2, 1, 0,
+  transistorCNY, LED_CNY,
   dist,
   new IRrecv(IRreadpin),
   trigPin, echoPin,
@@ -44,7 +45,7 @@ void loop() {
     Serial.println(hormiga.getDatIR(), 4);
   }
   
-	//motores.desp(1);
+	motores.desp(1);
 
 	delay(100);
 }
