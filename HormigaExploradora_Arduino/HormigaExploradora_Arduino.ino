@@ -15,7 +15,7 @@
 
 #define PPR 48 // cambiar esto al numero de pasos por revolucion del motor a usar
 
-SincSteps motores(PPR, 11, 9, 10, 8, PPR, 4, 6, 5, 7);
+SincSteps motores(PPR, 9, 8, PPR, 4, 6, 5, 7);
 IRsend irsend;
 
 void setup() {

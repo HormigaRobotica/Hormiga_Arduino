@@ -21,6 +21,8 @@
 #define LED_CNY 2 //pin del LED infrarrojo del sensor de color
 #define dist 15 //distancia a considerar para obstaculos
 #define azucarRGB 255.0 //color del azucar
+#define diamRueda 6 //diametro de la rueda [cm]
+#define distRuedas 14 //distancia entre las ruedas [cm]
 
 //Stepper MP(STEPS, 11,9,10,8);
 SincSteps motores(PPR1, 11, 9, 10, 8, PPR2, 4, 6, 5, 7);
@@ -30,7 +32,8 @@ HormigaSeguidora hormiga(
   dist,
   new IRrecv(IRreadpin),
   trigPin, echoPin,
-  azucarRGB);
+  azucarRGB,
+  diamRueda, distRuedas);
 
 float resultados;
 

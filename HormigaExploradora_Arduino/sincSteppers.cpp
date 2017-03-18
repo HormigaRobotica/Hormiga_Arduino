@@ -10,10 +10,6 @@
 */
 
 #include "sincSteppers.h"
-//calcula el maximo comun divisor [MCD]
-int mcd(int a, int b){
-  return b == 0 ? a : mcd(b, a % b);
-}
 
 // Constructor Sobrecargado
 SincSteps::SincSteps(const int pasosRev1,
@@ -75,7 +71,7 @@ SincSteps::SincSteps(const int pasosRev1,
 
 //calcula la cantidad(minima) de pasos necesarios para un desplazamiento uniforme de ambos motores
 void SincSteps::calcPasosDesp(const int pasosRev1, const int pasosRev2){
-  ratio = mcd(pasosRev1, pasosRev2);
+  ratio = gcd(pasosRev1, pasosRev2);
   pasosDesp[0] = pasosRev1 / ratio;
   pasosDesp[1] = pasosRev2 / ratio;
 }
@@ -115,4 +111,8 @@ int SincSteps::getPasosDesp(byte nMotor){
 void SincSteps::setSpeed(unsigned long rpms){
   motor[0]->setSpeed(rpms);
   motor[1]->setSpeed(rpms);
+}
+
+int SincSteps::getRatio(){
+  return ratio;
 }

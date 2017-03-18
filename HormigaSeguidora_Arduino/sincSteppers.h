@@ -14,8 +14,7 @@
 
 #include <Arduino.h>
 #include <Stepper.h>
-
-int mcd(int a, int b);
+#include "extendMath.h"
 
 class SincSteps{
   public:
@@ -64,6 +63,7 @@ class SincSteps{
     void revInv(long nRev); //rota los motores en direcciones opuestas vueltas completas
     int getPasosDesp(byte nMotor); //retorna el numero de pasos para que el motor referenciado por "nMotor" de 1 desplazamiento
     void setSpeed(unsigned long rpms); //establece la velocidad de los motores
+    int getRatio(); //retorna ratio de rotación
     
   private:
     Stepper *motor[2];
