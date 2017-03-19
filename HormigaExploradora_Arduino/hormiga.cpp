@@ -15,6 +15,7 @@
 #define BUSCANDO 1
 #define ENCONTRADA 2
 #define COMUNICANDO 3
+#define SIGUIENDO 4
 
 Hormiga::Hormiga(
 	SincSteps* despl,
@@ -104,7 +105,7 @@ bool Hormiga::desplazar(){
 void Hormiga::setEstado(byte e){ estado = e; }
 
 //retorna el estado de trabajo actual
-byte getEstado(){ return estado; }
+byte Hormiga::getEstado(){ return estado; }
 
 //retorna hacia la posición original
 void Hormiga::retornar(){
@@ -112,6 +113,21 @@ void Hormiga::retornar(){
 	despl->desp   ( vectorDesp[0]     / perimRueda );
 	setEstado(COMUNICANDO);
 }
+
+//asigna valores al vector de desplazamiento
+void Hormiga::setVector(double m, double a){
+	vectorDesp[0] = m;
+	vectorDesp[1] = a;
+}
+
+//asigna el módulo del vector de desplazamiento
+void Hormiga::setVectorMod(double m){ vectorDesp[0] = m; }
+
+//asigna el ángulo del vector de desplazamiento
+void Hormiga::setVectorAng(double a){ vectorDesp[1] = a; }
+
+//retorna el vector desplazamiento
+double* Hormiga::getVector(){ return vectorDesp; }
 
 //***************************************************************************************************
 
@@ -133,6 +149,7 @@ HormigaSeguidora::HormigaSeguidora(SincSteps* sinc, //puntero a la instancia par
 bool HormigaSeguidora::chkIR(){
 	if (IRRead->decode(IRRes)){
 		datosIR = *reinterpret_cast<float*>(&IRRes->value);
+		setVectorAng(datosIR);
 		IRRead->resume();
 		return true;
 	}
@@ -142,13 +159,24 @@ bool HormigaSeguidora::chkIR(){
 float HormigaSeguidora::getDatIR(){ return datosIR; }
 void  HormigaSeguidora::enableIR(){ IRRead->enableIRIn(); }
 
+//lleva la hormiga hacia el azucar
+void HormigaSeguidora::seguir(){
+	/*EN CONSTRUCCIÓN
+	despl->despInv( despl->getRatio() / 2          );
+	despl->desp   ( vectorDesp[0]     / perimRueda );
+	setEstado(COMUNICANDO);*/
+}
+
 //realiza el siguiente trabajo pendiente (basado en el estado)
 void HormigaSeguidora::trabajar(){
 	switch (getEstado()){
 		case ESPERANDO:
+			if(chkIR()){
+				setEstado(SIGUIENDO);
+			}
 			break;
-		case BUSCANDO:
-			desplazar();
+		case SIGUIENDO:
+			seguir();
 			break;
 		case ENCONTRADA:
 			retornar();
@@ -182,7 +210,7 @@ void HormigaExploradora::enviarIR(float datos){
 void HormigaExploradora::iniBusqueda(){ setEstado(BUSCANDO); }
 
 //realiza el siguiente trabajo pendiente (basado en el estado)
-void HormigaSeguidora::trabajar(){
+void HormigaExploradora::trabajar(){
 	switch (getEstado()){
 		case ESPERANDO:
 			break;
@@ -193,7 +221,7 @@ void HormigaSeguidora::trabajar(){
 			retornar();
 			break;
 		case COMUNICANDO:
-			enviarIR((float)vectorDesp[1]);
+			enviarIR((float)getVector()[1]);
 			break;
 	};
 }
