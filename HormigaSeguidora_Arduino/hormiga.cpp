@@ -11,11 +11,6 @@
 
 #include "hormiga.h"
 #define ROTAC_FRAC 1/4 //fracción de vuelta por desplazamiento
-#define ESPERANDO 0
-#define BUSCANDO 1
-#define ENCONTRADA 2
-#define COMUNICANDO 3
-#define SIGUIENDO 4
 
 Hormiga::Hormiga(
 	SincSteps* despl,
@@ -127,7 +122,15 @@ void Hormiga::setVectorMod(double m){ vectorDesp[0] = m; }
 void Hormiga::setVectorAng(double a){ vectorDesp[1] = a; }
 
 //retorna el vector desplazamiento
-double* Hormiga::getVector(){ return vectorDesp; }
+double* Hormiga::getVector    (){ return vectorDesp; }
+//retorna el perimetro de las ruedas
+float   Hormiga::getPerimRueda(){ return perimRueda; }
+//retorna el perimetro de la hormiga
+float   Hormiga::getPerimRobot(){ return perimRobot; }
+//retorna la distancia a la cual se detectan obstaculos
+float   Hormiga::getDist      (){ return dist; }
+//retorna el puntero al control de los motores
+SincSteps* Hormiga::getDespl  (){ return despl; }
 
 //***************************************************************************************************
 
@@ -161,10 +164,11 @@ void  HormigaSeguidora::enableIR(){ IRRead->enableIRIn(); }
 
 //lleva la hormiga hacia el azucar
 void HormigaSeguidora::seguir(){
-	/*EN CONSTRUCCIÓN
-	despl->despInv( despl->getRatio() / 2          );
-	despl->desp   ( vectorDesp[0]     / perimRueda );
-	setEstado(COMUNICANDO);*/
+	getDespl()->despInv( (rad2deg(getVector()[1]) * getPerimRobot()) / (getPerimRueda() * 45) );
+	while(Ultrasonico() > getDist()){
+		getDespl()->desp(1);
+	}
+	setEstado(ENCONTRADA);
 }
 
 //realiza el siguiente trabajo pendiente (basado en el estado)

@@ -26,14 +26,7 @@
 
 //Stepper MP(STEPS, 11,9,10,8);
 SincSteps motores(PPR1, 11, 9, 10, 8, PPR2, 4, 6, 5, 7);
-HormigaSeguidora hormiga(
-  &motores,
-  transistorCNY, LED_CNY,
-  dist,
-  new IRrecv(IRreadpin),
-  trigPin, echoPin,
-  azucarRGB,
-  diamRueda, distRuedas);
+HormigaSeguidora hormiga(&motores, transistorCNY, LED_CNY, dist, new IRrecv(IRreadpin), trigPin, echoPin, azucarRGB, diamRueda, distRuedas);
 
 float resultados;
 

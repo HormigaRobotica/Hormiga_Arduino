@@ -12,25 +12,35 @@
 #ifndef HORMIGA_H
 #define HORMIGA_H
 
+#define ESPERANDO   0
+#define BUSCANDO    1
+#define ENCONTRADA  2
+#define COMUNICANDO 3
+#define SIGUIENDO   4
+
 #include <IRremote.h>
 #include "sincSteppers.h"
 
 class Hormiga {
 	public:
-		float   Ultrasonico();                 //lee los datos del ultrasónico
-		void    calColor   ();                 //calibra el color a reconocer como azucar
-		void    toleranciaColor(int colorTol); //establece la tolerancia para el sensor de color (por defecto = +-2)
-		float   escogeDir();                   //escoge de forma aleatoria una dirección hacia la cual ir
-		bool    desplazar();                   //se desplaza una distancia definida a menos que exista un obstaculo
-		int     leerColor();                   //lee los datos del CNY
-		void    setVector(double m, double a); //asigna valores al vector de desplazamiento
-		void    setVectorMod(double m);        //asigna el módulo del vector de desplazamiento
-		void    setVectorAng(double a);        //asigna el ángulo del vector de desplazamiento
-    	double* getVector();                   //retorna el vector desplazamiento
-		void    retornar ();                   //retorna hacia la posición original
-		void    setEstado(byte e);             //establece el estado actual de trabajo
-		byte    getEstado();                   //retorna el estado de trabajo actual
-		virtual void trabajar() =0;            //realiza el siguiente trabajo pendiente (basado en el estado)
+		float   Ultrasonico    ();                   //lee los datos del ultrasónico
+		void    calColor       ();                   //calibra el color a reconocer como azucar
+		void    toleranciaColor(int colorTol);       //establece la tolerancia para el sensor de color (por defecto = +-2)
+		float   escogeDir      ();                   //escoge de forma aleatoria una dirección hacia la cual ir
+		bool    desplazar      ();                   //se desplaza una distancia definida a menos que exista un obstaculo
+		int     leerColor      ();                   //lee los datos del CNY
+		void    setVector      (double m, double a); //asigna valores al vector de desplazamiento
+		void    setVectorMod   (double m);           //asigna el módulo del vector de desplazamiento
+		void    setVectorAng   (double a);           //asigna el ángulo del vector de desplazamiento
+    	double* getVector      ();                   //retorna el vector desplazamiento
+		void    retornar       ();                   //retorna hacia la posición original
+		void    setEstado      (byte e);             //establece el estado actual de trabajo
+		byte    getEstado      ();                   //retorna el estado de trabajo actual
+		float   getPerimRueda  ();                   //retorna el perimetro de las ruedas
+		float   getPerimRobot  ();                   //retorna el perimetro de la hormiga
+		float   getDist        ();                   //retorna la distancia a la cual se detectan obstaculos
+		SincSteps* getDespl    ();                   //retorna el puntero al control de los motores
+		virtual void trabajar  () =0;                //realiza el siguiente trabajo pendiente (basado en el estado)
 
 	protected:
 		Hormiga(SincSteps* despl,
@@ -98,9 +108,9 @@ class HormigaExploradora : public Hormiga {
 			int   color,                            //color a considerar como "azucar"
 			float diamRueda, float anchoRobot);     //diametro de la rueda y ancho del robot
 		
-		void enviarIR(float datos); //envía datos usando el emisor infrarrojo
+		void enviarIR   (float datos); //envía datos usando el emisor infrarrojo
 		void iniBusqueda();         //inicia la busqueda del azucar
-    void  trabajar(); //realiza el siguiente trabajo pendiente (basado en el estado)
+		void trabajar   (); //realiza el siguiente trabajo pendiente (basado en el estado)
 	private:
 		IRsend irsend;
 };

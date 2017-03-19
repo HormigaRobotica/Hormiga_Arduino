@@ -13,26 +13,30 @@
 
 #include "hormiga.h"
 
-#define PPR 48 // cambiar esto al numero de pasos por revolucion del motor a usar
+//NOTA: El pin 3 esta reservado para el emisor infrarrojo
 
-SincSteps motores(PPR, 9, 8, PPR, 4, 6, 5, 7);
-IRsend irsend;
+#define PPR           48 // cambiar esto al numero de pasos por revolucion del motor a usar
+#define CNYTransistor A0 //pin del transistor del sensor de color
+#define LEDCNY         2 //pin del LED del sensor de color
+#define DIST          15 //distancia a la cual se evitan los obstaculos [cm]
+#define ULTRAS_TRIG    5 //Pin "Trigger" del sensor ultrasónico
+#define ULTRAS_ECHO    4 //Pin "Echo" del sensor ultrasónico
+#define COLOR        123 //color a considerar como "azucar"
+#define DIAM_RUEDA     6 //diametro de las ruedas [cm]
+#define ANCHO_ROBOT   14 //ancho del robot (distancia entre las ruedas) [cm]
+
+SincSteps motores(PPR, 10, 12, 11, 13, PPR, 6, 8, 7, 9);
+HormigaExploradora hormiga(&motores, CNYTransistor, LEDCNY, DIST, ULTRAS_TRIG, ULTRAS_ECHO, COLOR, DIAM_RUEDA, ANCHO_ROBOT);
 
 void setup() {
-  // put your setup code here, to run once:
+  motores.setSpeed (5);
+  hormiga.setEstado(BUSCANDO);
   Serial.begin(9600);
 }
 
 void loop() {
-  Serial.println("enviando datos");
-  for (int i = 0; i < 3; i++) {
-    float f = 7.155;
-    irsend.sendSony(*reinterpret_cast<unsigned long*>(&f), 32); // Sony TV power code
-    delay(100);
-  }
-  Serial.println("datos enviados");
-  
-  motores.desp(1); //mueve los motores 1 desplazamiento
 
-  delay(5000);
+  hormiga.trabajar();
+
+  delay(5);
 }
