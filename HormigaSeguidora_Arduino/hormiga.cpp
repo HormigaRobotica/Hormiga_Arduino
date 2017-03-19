@@ -13,16 +13,18 @@
 #define ROTAC_FRAC 1/4 //fracción de vuelta por desplazamiento
 #define ESPERANDO 0
 #define BUSCANDO 1
-#define ENCONTRADA 3
+#define ENCONTRADA 2
+#define COMUNICANDO 3
+#define SIGUIENDO 4
 
 Hormiga::Hormiga(
 	SincSteps* despl,
-	byte trigPin, byte echoPin, float dist,
-	byte pinTransistorCNY, byte pinLEDCNY,
-	int color,
+	byte  trigPin, byte echoPin, float dist,
+	byte  pinTransistorCNY, byte pinLEDCNY,
+	int   color,
 	float diamRueda, float anchoRobot) :
 
-	despl(despl),
+	despl  (despl),
 	trigPin(trigPin), echoPin(echoPin), dist(dist),
 	pinTransistorCNY(pinTransistorCNY), pinLEDCNY(pinLEDCNY), color(color),
 	perimRueda(diamRueda * PI),
@@ -32,7 +34,7 @@ Hormiga::Hormiga(
 	pinMode(echoPin, INPUT);
 	colorTol = 2;
 	vectorDesp[0] = vectorDesp[1] = 0;
-  randomSeed(analogRead(A4));
+	randomSeed(analogRead(A4));
 }
 
 //mide la distancia entre el ultrasonico y un obstáculo
@@ -49,12 +51,19 @@ float Hormiga::Ultrasonico(){
 
 //lee los datos del CNY
 int Hormiga::leerColor(){
-	return analogRead(pinTransistorCNY);
+	int l;
+	digitalWrite(pinLEDCNY, HIGH);
+	
+	for (int i = 0; i < 4; ++i)
+		l += analogRead(pinTransistorCNY);
+	l /= 4;
+	
+	return l;
 }
 
 //calibra el color a reconocer como azucar
 void Hormiga::calColor(){
-  color = leerColor();
+	color = leerColor();
 }
 
 //establece la tolerancia para el sensor de color (por defecto = +-2)
@@ -65,8 +74,7 @@ void Hormiga::toleranciaColor(int colorTol){
 //escoge de forma aleatoria una dirección hacia la cual ir
 float Hormiga::escogeDir(){
 	float fracCirc = (random(2) ? 1 : -1) * random(5) / 8; //genera la fracción del circulo sobre el cual se va a rotar
-	
-	int rotac = despl->getRatio() * fracCirc; //genera la fracción del circulo sobre el cual se va a rotar
+	int   rotac    = despl->getRatio() * fracCirc;         //genera la fracción del circulo sobre el cual se va a rotar
 
 	despl->despInv(rotac);
 
@@ -79,7 +87,7 @@ bool Hormiga::desplazar(){
 	float angulo = 0;
 	while(Ultrasonico() < dist){
 		angulo += escogeDir();
-		colorL = leerColor();
+		colorL  = leerColor();
 
 		if(colorL < (color + colorTol) && (color - colorTol) < colorL){
 			estado = ENCONTRADA;
@@ -93,45 +101,55 @@ bool Hormiga::desplazar(){
 	return false;
 }
 
+//establece el estado actual de trabajo
 void Hormiga::setEstado(byte e){ estado = e; }
 
+//retorna el estado de trabajo actual
+byte Hormiga::getEstado(){ return estado; }
+
+//retorna hacia la posición original
 void Hormiga::retornar(){
-
+	despl->despInv( despl->getRatio() / 2          );
+	despl->desp   ( vectorDesp[0]     / perimRueda );
+	setEstado(COMUNICANDO);
 }
 
-void Hormiga::trabajar(){
-  switch (estado){
-    case ESPERANDO:
-      break;
-    case BUSCANDO:
-      desplazar();
-      break;
-    case ENCONTRADA:
-      retornar();
-      break;
-  };
+//asigna valores al vector de desplazamiento
+void Hormiga::setVector(double m, double a){
+	vectorDesp[0] = m;
+	vectorDesp[1] = a;
 }
+
+//asigna el módulo del vector de desplazamiento
+void Hormiga::setVectorMod(double m){ vectorDesp[0] = m; }
+
+//asigna el ángulo del vector de desplazamiento
+void Hormiga::setVectorAng(double a){ vectorDesp[1] = a; }
+
+//retorna el vector desplazamiento
+double* Hormiga::getVector(){ return vectorDesp; }
 
 //***************************************************************************************************
 
 HormigaSeguidora::HormigaSeguidora(SincSteps* sinc, //puntero a la instancia para la sinsronización de los motores
-	byte pinTransistorCNY, byte pinLEDCNY, //pines del transistor y el LED del sensor de color
-	float distObstaculo, //distancia a la cual se evitan los obstaculos
-	IRrecv* IRRead, //lector del sensor infrarrojo
-	byte UltrasTrigPin, //Pin "Trigger" del sensor ultrasónico
-	byte UltrasEchoPin, //Pin "Echo" del sensor ultrasónico
-	int color, //color a considerar como "azucar"
-	float diamRueda, float anchoRobot) :  //diametro de la rueda y ancho del robot
+	byte    pinTransistorCNY, byte pinLEDCNY,       //pines del transistor y el LED del sensor de color
+	float   distObstaculo,                          //distancia a la cual se evitan los obstaculos
+	IRrecv* IRRead,                                 //lector del sensor infrarrojo
+	byte    UltrasTrigPin,                          //Pin "Trigger" del sensor ultrasónico
+	byte    UltrasEchoPin,                          //Pin "Echo" del sensor ultrasónico
+	int     color,                                  //color a considerar como "azucar"
+	float   diamRueda, float anchoRobot) :          //diametro de la rueda y ancho del robot
 
 	Hormiga(sinc, UltrasTrigPin, UltrasEchoPin, distObstaculo, pinTransistorCNY, pinLEDCNY, color, diamRueda, anchoRobot),
-	IRRead(IRRead),
-	IRRes(new decode_results)
+	IRRead (IRRead),
+	IRRes  (new decode_results)
 {
 }
 
 bool HormigaSeguidora::chkIR(){
 	if (IRRead->decode(IRRes)){
 		datosIR = *reinterpret_cast<float*>(&IRRes->value);
+		setVectorAng(datosIR);
 		IRRead->resume();
 		return true;
 	}
@@ -139,17 +157,42 @@ bool HormigaSeguidora::chkIR(){
 }
 
 float HormigaSeguidora::getDatIR(){ return datosIR; }
-void HormigaSeguidora::enableIR(){ IRRead->enableIRIn(); }
+void  HormigaSeguidora::enableIR(){ IRRead->enableIRIn(); }
+
+//lleva la hormiga hacia el azucar
+void HormigaSeguidora::seguir(){
+	/*EN CONSTRUCCIÓN
+	despl->despInv( despl->getRatio() / 2          );
+	despl->desp   ( vectorDesp[0]     / perimRueda );
+	setEstado(COMUNICANDO);*/
+}
+
+//realiza el siguiente trabajo pendiente (basado en el estado)
+void HormigaSeguidora::trabajar(){
+	switch (getEstado()){
+		case ESPERANDO:
+			if(chkIR()){
+				setEstado(SIGUIENDO);
+			}
+			break;
+		case SIGUIENDO:
+			seguir();
+			break;
+		case ENCONTRADA:
+			retornar();
+			break;
+	};
+}
 
 //***************************************************************************************************
 
 HormigaExploradora::HormigaExploradora(SincSteps* sinc, //puntero a la instancia para la sinsronización de los motores
-	byte pinTransistorCNY, byte pinLEDCNY, //pines del transistor y el LED del sensor de color
-	float distObstaculo, //distancia a la cual se evitan los obstaculos
-	byte UltrasTrigPin, //Pin "Trigger" del sensor ultrasónico
-	byte UltrasEchoPin, //Pin "Echo" del sensor ultrasónico
-	int color, //color a considerar como "azucar"
-	float diamRueda, float anchoRobot) : //diametro de la rueda y ancho del robot
+	byte pinTransistorCNY, byte pinLEDCNY,              //pines del transistor y el LED del sensor de color
+	float distObstaculo,                                //distancia a la cual se evitan los obstaculos
+	byte UltrasTrigPin,                                 //Pin "Trigger" del sensor ultrasónico
+	byte UltrasEchoPin,                                 //Pin "Echo" del sensor ultrasónico
+	int color,                                          //color a considerar como "azucar"
+	float diamRueda, float anchoRobot) :                //diametro de la rueda y ancho del robot
 
 	Hormiga(sinc, UltrasTrigPin, UltrasEchoPin, distObstaculo, pinTransistorCNY, pinLEDCNY, color, diamRueda, anchoRobot)
 {
@@ -161,7 +204,24 @@ void HormigaExploradora::enviarIR(float datos){
 		irsend.sendSony(*reinterpret_cast<unsigned long*>(&datos), 32); // Sony TV power code
 		delay(100);
 	}
+	setEstado(ESPERANDO);
 }
 
 void HormigaExploradora::iniBusqueda(){ setEstado(BUSCANDO); }
 
+//realiza el siguiente trabajo pendiente (basado en el estado)
+void HormigaExploradora::trabajar(){
+	switch (getEstado()){
+		case ESPERANDO:
+			break;
+		case BUSCANDO:
+			desplazar();
+			break;
+		case ENCONTRADA:
+			retornar();
+			break;
+		case COMUNICANDO:
+			enviarIR((float)getVector()[1]);
+			break;
+	};
+}

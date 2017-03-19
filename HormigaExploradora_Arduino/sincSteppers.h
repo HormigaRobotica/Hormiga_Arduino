@@ -57,13 +57,13 @@ class SincSteps{
     // Fin Constructor Sobrecargado
 
     void calcPasosDesp(const int pasosRev1, const int pasosRev2); //calcula el numero de pasos requerido para un desplazamiento uniforme
-    void desp(long nDesp); //rota cada uno de los motores hasta llegar al desplazamiento requerido
-    void rev(long nRev); //rota los motores vueltas completas
-    void despInv(long nDesp); //rota cada uno de los motores en direcciones opuestas hasta llegar al desplazamiento requerido
-    void revInv(long nRev); //rota los motores en direcciones opuestas vueltas completas
-    int getPasosDesp(byte nMotor); //retorna el numero de pasos para que el motor referenciado por "nMotor" de 1 desplazamiento
+    void desp(long nDesp);             //rota cada uno de los motores hasta llegar al desplazamiento requerido
+    void rev(long nRev);               //rota los motores vueltas completas
+    void despInv(long nDesp);          //rota cada uno de los motores en direcciones opuestas hasta llegar al desplazamiento requerido
+    void revInv(long nRev);            //rota los motores en direcciones opuestas vueltas completas
+    int  getPasosDesp(byte nMotor);    //retorna el numero de pasos para que el motor referenciado por "nMotor" de 1 desplazamiento
     void setSpeed(unsigned long rpms); //establece la velocidad de los motores
-    int getRatio(); //retorna ratio de rotación
+    int  getRatio();                   //retorna ratio de rotación
     
   private:
     Stepper *motor[2];
