@@ -21,6 +21,8 @@ int gcd(int a, int b); //calculates the gratest common divisor between 2 numbers
 double deg2rad(double a);
 double rad2deg(double a);
 
+double normalizeAngle(double a); //normalize angle to 2 * PI
+
 //Vector arithmetics*****************************************************
 
 //adds vectors a + b and stores the result in s

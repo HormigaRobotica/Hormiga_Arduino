@@ -23,22 +23,25 @@
 
 class Hormiga {
 	public:
-		float   Ultrasonico    ();                   //lee los datos del ultrasónico
-		void    calColor       ();                   //calibra el color a reconocer como azucar
-		void    toleranciaColor(int colorTol);       //establece la tolerancia para el sensor de color (por defecto = +-2)
-		float   escogeDir      ();                   //escoge de forma aleatoria una dirección hacia la cual ir
 		bool    desplazar      ();                   //se desplaza una distancia definida a menos que exista un obstaculo
 		int     leerColor      ();                   //lee los datos del CNY
+		int     getPpg         ();                   //retorna el número de pasos por giro de la hormiga
+		void    rotarFrac      (float n);            //rota la hormiga una fracción de giro dada por "n"
+		void    calColor       ();                   //calibra el color a reconocer como azucar
+		void    toleranciaColor(int colorTol);       //establece la tolerancia para el sensor de color (por defecto = +-2)
 		void    setVector      (double m, double a); //asigna valores al vector de desplazamiento
 		void    setVectorMod   (double m);           //asigna el módulo del vector de desplazamiento
 		void    setVectorAng   (double a);           //asigna el ángulo del vector de desplazamiento
-    	double* getVector      ();                   //retorna el vector desplazamiento
 		void    retornar       ();                   //retorna hacia la posición original
 		void    setEstado      (byte e);             //establece el estado actual de trabajo
-		byte    getEstado      ();                   //retorna el estado de trabajo actual
+		void    seguir         ();                   //lleva la hormiga hacia el azucar
+    	double* getVector      ();                   //retorna el vector desplazamiento
+    	float   Ultrasonico    ();                   //lee los datos del ultrasónico
+		float   escogeDir      ();                   //escoge de forma aleatoria una dirección hacia la cual ir
 		float   getPerimRueda  ();                   //retorna el perimetro de las ruedas
 		float   getPerimRobot  ();                   //retorna el perimetro de la hormiga
 		float   getDist        ();                   //retorna la distancia a la cual se detectan obstaculos
+		byte    getEstado      ();                   //retorna el estado de trabajo actual
 		SincSteps* getDespl    ();                   //retorna el puntero al control de los motores
 		virtual void trabajar  () =0;                //realiza el siguiente trabajo pendiente (basado en el estado)
 
@@ -55,15 +58,17 @@ class Hormiga {
 		SincSteps* despl;            //puntero a la instancia para la sinsronización de los motores
 		byte       trigPin;          //Pin "Trigger" del sensor ultrasónico
 		byte       echoPin;          //Pin "Echo" del sensor ultrasónico
-		float      dist;             //distancia a la cual se evitan los obstaculos
 		byte       pinTransistorCNY; //pin para transistor del sensor de color
 		byte       pinLEDCNY;        //pin para LED del sensor de color
+		byte       estado;           //estado actual de trabajo
+		float      dist;             //distancia a la cual se evitan los obstaculos
 		int        color;            //color a considerar como "azucar"
 		int        colorTol;         //tolerancia del color
+		int        ppg;              //pasos por giro de la hormiga
 		const      float perimRueda; //perimetro de las ruedas
 		const      float perimRobot; //perimetro del robot
 		double     vectorDesp[2];    //vector desplazamiento {modulo, ángulo}
-		byte       estado;           //estado actual de trabajo
+		double     ultAngulo;        //ángulo de la última rotación
 };
 #endif
 
@@ -85,7 +90,6 @@ class HormigaSeguidora : public Hormiga {
 		bool  chkIR   (); //revisa si el infrarrojo recibio datos
 		float getDatIR(); //retorna los datos recibidos por infrarrojo
 		void  enableIR(); //activa la funcionalidad del infrarrojo
-		void  seguir  (); //lleva la hormiga hacia el azucar
 		void  trabajar(); //realiza el siguiente trabajo pendiente (basado en el estado)
 	private:
 		IRrecv*         IRRead;

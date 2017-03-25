@@ -23,7 +23,8 @@ Hormiga::Hormiga(
 	trigPin(trigPin), echoPin(echoPin), dist(dist),
 	pinTransistorCNY(pinTransistorCNY), pinLEDCNY(pinLEDCNY), color(color),
 	perimRueda(diamRueda * PI),
-	perimRobot(anchoRobot * PI)
+	perimRobot(anchoRobot * PI),
+	ppg(perimRobot * despl->getRatio() / perimRueda)
 {
 	pinMode(trigPin, OUTPUT);
 	pinMode(echoPin, INPUT);
@@ -56,33 +57,24 @@ int Hormiga::leerColor(){
 	return l;
 }
 
-//calibra el color a reconocer como azucar
-void Hormiga::calColor(){
-	color = leerColor();
-}
-
-//establece la tolerancia para el sensor de color (por defecto = +-2)
-void Hormiga::toleranciaColor(int colorTol){
-	this->colorTol = colorTol;
-}
-
 //escoge de forma aleatoria una dirección hacia la cual ir
 float Hormiga::escogeDir(){
 	float fracCirc = (random(2) ? 1 : -1) * random(5) / 8; //genera la fracción del circulo sobre el cual se va a rotar
-	int   rotac    = despl->getRatio() * fracCirc;         //genera la fracción del circulo sobre el cual se va a rotar
 
-	despl->despInv(rotac);
+	rotarFrac(fracCirc);
 
-	return fracCirc * perimRueda * 360 / perimRobot; //retorna el ángulo de rotación de la hormiga
+	return 2 * PI * fracCirc; //retorna el ángulo de rotación de la hormiga
 }
 
 //se desplaza una distancia definida a menos que exista un obstaculo
 bool Hormiga::desplazar(){
 	int colorL;
-	float angulo = 0;
+	ultAngulo = normalizeAngle(escogeDir());
+
 	while(Ultrasonico() < dist){
-		angulo += escogeDir();
-		colorL  = leerColor();
+		rotarFrac(1/8);
+		ultAngulo = normalizeAngle(ultAngulo + PI/4);
+		colorL = leerColor();
 
 		if(colorL < (color + colorTol) && (color - colorTol) < colorL){
 			estado = ENCONTRADA;
@@ -90,47 +82,55 @@ bool Hormiga::desplazar(){
 		}
 	}
 
-	addVectorsPolar(vectorDesp[0], vectorDesp[1], perimRueda * ROTAC_FRAC, deg2rad(angulo), vectorDesp, vectorDesp + 1);
+	addVectorsPolar(vectorDesp[0], vectorDesp[1], perimRueda * ROTAC_FRAC, deg2rad(ultAngulo), vectorDesp, vectorDesp + 1);
 
 	despl->desp(despl->getRatio() * ROTAC_FRAC);
 	return false;
 }
 
-//establece el estado actual de trabajo
-void Hormiga::setEstado(byte e){ estado = e; }
-
-//retorna el estado de trabajo actual
-byte Hormiga::getEstado(){ return estado; }
+//rota la hormiga una fracción de giro dada por "n" Ej: n=0.5 (media vuelta)
+void Hormiga::rotarFrac(float n){ despl->despInv( ppg * n ); }
 
 //retorna hacia la posición original
 void Hormiga::retornar(){
-	despl->despInv( despl->getRatio() / 2          );
-	despl->desp   ( vectorDesp[0]     / perimRueda );
-	setEstado(COMUNICANDO);
+	rotarFrac  ( -ultAngulo / (2 * PI) );
+	despl->desp( vectorDesp[0] / perimRueda );
+	setEstado  (COMUNICANDO);
 }
+
+//lleva la hormiga hacia el azucar
+void Hormiga::seguir(){
+	rotarFrac  ( getVector()[0] / (2 * PI) );
+	/*Nota: Agregar análisis de color*/
+	while(Ultrasonico() > getDist()){
+		getDespl()->desp(1);
+	}
+	setEstado(ENCONTRADA);
+}
+
+//Funciones de asignación****************************************************
+void Hormiga::setEstado      (  byte e      ){ estado = e;                } //establece el estado actual de trabajo
+void Hormiga::setVectorMod   (  double m    ){ vectorDesp[0] = m;         } //asigna el módulo del vector de desplazamiento
+void Hormiga::setVectorAng   (  double a    ){ vectorDesp[1] = a;         } //asigna el ángulo del vector de desplazamiento
+void Hormiga::calColor       (              ){ color = leerColor();       } //calibra el color a reconocer como azucar
+void Hormiga::toleranciaColor( int colorTol ){ this->colorTol = colorTol; } //establece la tolerancia para el sensor de color (por defecto = +-2)
 
 //asigna valores al vector de desplazamiento
 void Hormiga::setVector(double m, double a){
 	vectorDesp[0] = m;
 	vectorDesp[1] = a;
 }
+//Fin: Funciones de asignación***********************************************
 
-//asigna el módulo del vector de desplazamiento
-void Hormiga::setVectorMod(double m){ vectorDesp[0] = m; }
-
-//asigna el ángulo del vector de desplazamiento
-void Hormiga::setVectorAng(double a){ vectorDesp[1] = a; }
-
-//retorna el vector desplazamiento
-double* Hormiga::getVector    (){ return vectorDesp; }
-//retorna el perimetro de las ruedas
-float   Hormiga::getPerimRueda(){ return perimRueda; }
-//retorna el perimetro de la hormiga
-float   Hormiga::getPerimRobot(){ return perimRobot; }
-//retorna la distancia a la cual se detectan obstaculos
-float   Hormiga::getDist      (){ return dist; }
-//retorna el puntero al control de los motores
-SincSteps* Hormiga::getDespl  (){ return despl; }
+//Funciones para valores en variables****************************************
+byte       Hormiga::getEstado    (){ return estado;     } //retorna el estado de trabajo actual
+int        Hormiga::getPpg       (){ return ppg;        } //retorna el número de pasos por giro de la hormiga
+float      Hormiga::getPerimRueda(){ return perimRueda; } //retorna el perimetro de las ruedas
+float      Hormiga::getPerimRobot(){ return perimRobot; } //retorna el perimetro de la hormiga
+float      Hormiga::getDist      (){ return dist;       } //retorna la distancia a la cual se detectan obstaculos
+double*    Hormiga::getVector    (){ return vectorDesp; } //retorna el vector desplazamiento
+SincSteps* Hormiga::getDespl     (){ return despl;      } //retorna el puntero al control de los motores
+//Fin: Funciones para valores en variables***********************************
 
 //***************************************************************************************************
 
@@ -161,15 +161,6 @@ bool HormigaSeguidora::chkIR(){
 
 float HormigaSeguidora::getDatIR(){ return datosIR; }
 void  HormigaSeguidora::enableIR(){ IRRead->enableIRIn(); }
-
-//lleva la hormiga hacia el azucar
-void HormigaSeguidora::seguir(){
-	getDespl()->despInv( (rad2deg(getVector()[1]) * getPerimRobot()) / (getPerimRueda() * 45) );
-	while(Ultrasonico() > getDist()){
-		getDespl()->desp(1);
-	}
-	setEstado(ENCONTRADA);
-}
 
 //realiza el siguiente trabajo pendiente (basado en el estado)
 void HormigaSeguidora::trabajar(){

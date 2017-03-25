@@ -15,6 +15,9 @@ int gcd( int a, int b ){ return b == 0 ? a : gcd(b, a % b); }
 double deg2rad( double a ){ return PI * a / 180; }
 double rad2deg( double a ){ return 180 * a / PI; }
 
+//normalize angle to 2 * PI
+double normalizeAngle(double a){ return atan2(sin(a), cos(a)); }
+
 //Vector arithmetics*****************************************************
 
 //adds vectors a + b and stores the result in s
