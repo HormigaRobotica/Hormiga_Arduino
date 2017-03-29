@@ -13,7 +13,7 @@
 #define SINCSTEPPERS_H
 
 #include <Arduino.h>
-#include <Stepper.h>
+//#include <Stepper.h>
 #include "extendMath.h"
 
 class SincSteps{
@@ -64,10 +64,12 @@ class SincSteps{
     int  getPasosDesp(byte nMotor);    //retorna el numero de pasos para que el motor referenciado por "nMotor" de 1 desplazamiento
     void setSpeed(unsigned long rpms); //establece la velocidad de los motores
     int  getRatio();                   //retorna ratio de rotación
+    void Step(byte n, long steps);
     
   private:
-    Stepper *motor[2];
+    byte motor[2][6];
     int pasosDesp[2];
+    unsigned long rpms;
     int ratio;
 };
 

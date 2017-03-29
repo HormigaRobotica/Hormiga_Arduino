@@ -18,10 +18,10 @@
 #define PPR           48 // cambiar esto al numero de pasos por revolucion del motor a usar
 #define CNYTransistor A0 //pin del transistor del sensor de color
 #define LEDCNY         2 //pin del LED del sensor de color
-#define DIST          15 //distancia a la cual se evitan los obstaculos [cm]
+#define DIST           5 //distancia a la cual se evitan los obstaculos [cm]
 #define ULTRAS_TRIG    5 //Pin "Trigger" del sensor ultrasónico
 #define ULTRAS_ECHO    4 //Pin "Echo" del sensor ultrasónico
-#define COLOR        123 //color a considerar como "azucar"
+#define COLOR          3 //color a considerar como "azucar"
 #define DIAM_RUEDA     6 //diametro de las ruedas [cm]
 #define ANCHO_ROBOT   14 //ancho del robot (distancia entre las ruedas) [cm]
 

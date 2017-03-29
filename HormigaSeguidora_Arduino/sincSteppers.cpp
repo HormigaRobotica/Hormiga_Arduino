@@ -17,11 +17,19 @@ SincSteps::SincSteps(const int pasosRev1,
   byte pin2Motor1,
   const int pasosRev2,
   byte pin1Motor2,
-  byte pin2Motor2)
+  byte pin2Motor2) :
+  rpms(25)
 {
-  motor[0] = new Stepper(pasosRev1, pin1Motor1, pin2Motor1);
-  motor[1] = new Stepper(pasosRev2, pin1Motor2, pin2Motor2);
+  motor[0][0] = pin1Motor1; motor[0][1] = pin2Motor1; motor[0][4] = 2;
+  motor[1][0] = pin1Motor2; motor[1][1] = pin2Motor2; motor[1][4] = 2;
+
+  motor[0][5] = motor[1][5] = 0;
   calcPasosDesp(pasosRev1, pasosRev2);
+
+  for(int i=0; i<2; i++){
+    for(int j=0; j<motor[i][4]; j++)
+      pinMode(motor[i][j],OUTPUT);
+  }
 }
 
 SincSteps::SincSteps(const int pasosRev1,
@@ -33,11 +41,19 @@ SincSteps::SincSteps(const int pasosRev1,
   byte pin1Motor2,
   byte pin2Motor2,
   byte pin3Motor2,
-  byte pin4Motor2)
+  byte pin4Motor2) :
+  rpms(25)
 {
-  motor[0] = new Stepper(pasosRev1, pin1Motor1, pin2Motor1, pin3Motor1, pin4Motor1);
-  motor[1] = new Stepper(pasosRev2, pin1Motor2, pin2Motor2, pin3Motor2, pin4Motor2);
+  motor[0][0] = pin1Motor1; motor[0][1] = pin2Motor1; motor[0][2] = pin3Motor1; motor[0][3] = pin4Motor1; motor[0][4] = 4;
+  motor[1][0] = pin1Motor2; motor[1][1] = pin2Motor2; motor[1][2] = pin3Motor2; motor[1][3] = pin4Motor2; motor[1][4] = 4;
+
+  motor[0][5] = motor[1][5] = 0;
   calcPasosDesp(pasosRev1, pasosRev2);
+
+  for(int i=0; i<2; i++){
+    for(int j=0; j<motor[i][4]; j++)
+      pinMode(motor[i][j],OUTPUT);
+  }
 }
 
 SincSteps::SincSteps(const int pasosRev1,
@@ -47,11 +63,19 @@ SincSteps::SincSteps(const int pasosRev1,
   byte pin4Motor1,
   const int pasosRev2,
   byte pin1Motor2,
-  byte pin2Motor2)
+  byte pin2Motor2) :
+  rpms(25)
 {
-  motor[0] = new Stepper(pasosRev1, pin1Motor1, pin2Motor1, pin3Motor1, pin4Motor1);
-  motor[1] = new Stepper(pasosRev2, pin1Motor2, pin2Motor2);
+  motor[0][0] = pin1Motor1; motor[0][1] = pin2Motor1; motor[0][2] = pin3Motor1; motor[0][3] = pin4Motor1; motor[0][4] = 4;
+  motor[1][0] = pin1Motor2; motor[1][1] = pin2Motor2; motor[1][4] = 2;
+  
+  motor[0][5] = motor[1][5] = 0;
   calcPasosDesp(pasosRev1, pasosRev2);
+  
+  for(int i=0; i<2; i++){
+    for(int j=0; j<motor[i][4]; j++)
+      pinMode(motor[i][j],OUTPUT);
+  }
 }
 
 SincSteps::SincSteps(const int pasosRev1,
@@ -61,11 +85,19 @@ SincSteps::SincSteps(const int pasosRev1,
   byte pin1Motor2,
   byte pin2Motor2,
   byte pin3Motor2,
-  byte pin4Motor2)
+  byte pin4Motor2) :
+  rpms(25)
 {
-  motor[0] = new Stepper(pasosRev1, pin1Motor1, pin2Motor1);
-  motor[1] = new Stepper(pasosRev2, pin1Motor2, pin2Motor2, pin3Motor2, pin4Motor2);
+  motor[0][0] = pin1Motor1; motor[0][1] = pin2Motor1; motor[0][4] = 2;
+  motor[1][0] = pin1Motor2; motor[1][1] = pin2Motor2; motor[1][2] = pin3Motor2; motor[1][3] = pin4Motor2; motor[1][4] = 4;
+  
+  motor[0][5] = motor[1][5] = 0;
   calcPasosDesp(pasosRev1, pasosRev2);
+
+  for(int i=0; i<2; i++){
+    for(int j=0; j<motor[i][4]; j++)
+      pinMode(motor[i][j],OUTPUT);
+  }
 }
 // Fin Constructor Sobrecargado
 
@@ -79,40 +111,56 @@ void SincSteps::calcPasosDesp(const int pasosRev1, const int pasosRev2){
 //rota cada uno de los motores hasta llegar al desplazamiento requerido
 void SincSteps::desp(long nDesp){
   for (long i = 0; i < nDesp; ++i){
-    motor[0]->step(pasosDesp[0]);
-    motor[1]->step(pasosDesp[1]);
+    Step(0, pasosDesp[0]);
+    Step(1, pasosDesp[1]);
   }
-}
-
-//rota cada uno de los motores (vueltas completas) hasta llegar al desplazamiento requerido
-void SincSteps::rev(long nRev){
-  desp(nRev * ratio);
 }
 
 //rota cada uno de los motores en direcciones opuestas hasta llegar al desplazamiento requerido
 void SincSteps::despInv(long nDesp){
-  for (long i = 0; i < nDesp; ++i){
-    motor[0]->step(pasosDesp[0]);
-    motor[1]->step(-pasosDesp[1]);
+  //Serial.println(nDesp);
+  for (long i = 0; i < abs(nDesp); ++i){
+    Step(0, ((nDesp < 0) ? -1 : 1) * pasosDesp[0]);
+    Step(1, ((nDesp < 0) ? 1 : -1) * pasosDesp[1]);
+  }
+}
+
+void SincSteps::Step(byte n, long steps){
+  byte jm = 1, aux;
+
+  if(steps < 0){
+    steps *= -1;
+    jm *= -1;
+  }
+
+  for(long i=0; i<steps; i++, motor[n][5] += jm){
+    motor[n][5] = (motor[n][5]==4) ? 0 : (motor[n][5]==255) ? 3 : motor[n][5];
+    aux = (motor[n][5] & 2) ? (motor[n][5] ^ 1) : motor[n][5];
+
+    digitalWrite(motor[n][1], bitRead(aux, 1));
+    digitalWrite(motor[n][0], bitRead(aux, 0));
+    
+    //Serial.print("motor "); Serial.print(n); Serial.print(": "); Serial.println(motor[n][5]);
+
+    if (motor[n][4] == 4){
+      digitalWrite(motor[n][3], !bitRead(aux, 1));
+      digitalWrite(motor[n][2], !bitRead(aux, 0));
+    }
+
+    delay(60000 / (rpms * ratio));
   }
 }
 
 //rota cada uno de los motores (vueltas completas) en direcciones opuestas hasta llegar al desplazamiento requerido
-void SincSteps::revInv(long nRev){
-  despInv(nRev * ratio);
-}
+void SincSteps::revInv(long nRev){ despInv(nRev * ratio); }
 
 //retorna el numero de pasos para que el motor referenciado por "nMotor" de 1 desplazamiento
-int SincSteps::getPasosDesp(byte nMotor){
-  return (nMotor == 0) ? pasosDesp[0] : pasosDesp[1];
-}
+int SincSteps::getPasosDesp(byte nMotor){ return (nMotor == 0) ? pasosDesp[0] : pasosDesp[1]; }
 
 //establece la velocidad de los motores
-void SincSteps::setSpeed(unsigned long rpms){
-  motor[0]->setSpeed(rpms);
-  motor[1]->setSpeed(rpms);
-}
+void SincSteps::setSpeed(unsigned long rpms){ this->rpms = rpms; }
 
-int SincSteps::getRatio(){
-  return ratio;
-}
+//rota cada uno de los motores (vueltas completas) hasta llegar al desplazamiento requerido
+void SincSteps::rev(long nRev){ desp(nRev * ratio); }
+
+int SincSteps::getRatio(){ return ratio; }

@@ -22,12 +22,15 @@ Hormiga::Hormiga(
 	despl  (despl),
 	trigPin(trigPin), echoPin(echoPin), dist(dist),
 	pinTransistorCNY(pinTransistorCNY), pinLEDCNY(pinLEDCNY), color(color),
-	perimRueda(diamRueda * PI),
-	perimRobot(anchoRobot * PI),
-	ppg(perimRobot * despl->getRatio() / perimRueda)
+	perimRueda((float)diamRueda * PI),
+	perimRobot((float)anchoRobot * PI)
 {
+
 	pinMode(trigPin, OUTPUT);
 	pinMode(echoPin, INPUT);
+
+
+	ppg = perimRobot * despl->getRatio() / perimRueda;/*112*/
 	colorTol = 2;
 	vectorDesp[0] = vectorDesp[1] = 0;
 	randomSeed(analogRead(A4));
@@ -59,9 +62,9 @@ int Hormiga::leerColor(){
 
 //escoge de forma aleatoria una dirección hacia la cual ir
 float Hormiga::escogeDir(){
-	float fracCirc = (random(2) ? 1 : -1) * random(5) / 8; //genera la fracción del circulo sobre el cual se va a rotar
-
-	rotarFrac(fracCirc);
+	float fracCirc = (random(2) ? 1 : -1) * random(3) / 8.0; //genera la fracción del circulo sobre el cual se va a rotar
+  
+	rotarFrac((float)fracCirc);
 
 	return 2 * PI * fracCirc; //retorna el ángulo de rotación de la hormiga
 }
@@ -72,35 +75,36 @@ bool Hormiga::desplazar(){
 	ultAngulo = normalizeAngle(escogeDir());
 
 	while(Ultrasonico() < dist){
-		rotarFrac(1/8);
 		ultAngulo = normalizeAngle(ultAngulo + PI/4);
 		colorL = leerColor();
-
+    Serial.println(colorL);
 		if(colorL < (color + colorTol) && (color - colorTol) < colorL){
 			estado = ENCONTRADA;
 			return true;
 		}
+    
+    rotarFrac(1.0/8.0);
 	}
 
-	addVectorsPolar(vectorDesp[0], vectorDesp[1], perimRueda * ROTAC_FRAC, deg2rad(ultAngulo), vectorDesp, vectorDesp + 1);
+	addVectorsPolar(vectorDesp[0], vectorDesp[1], perimRueda * ROTAC_FRAC, ultAngulo, vectorDesp, vectorDesp + 1);
 
 	despl->desp(despl->getRatio() * ROTAC_FRAC);
 	return false;
 }
 
 //rota la hormiga una fracción de giro dada por "n" Ej: n=0.5 (media vuelta)
-void Hormiga::rotarFrac(float n){ despl->despInv( ppg * n ); }
+void Hormiga::rotarFrac(float n){ despl->despInv( (float)ppg * (float)n ); }
 
 //retorna hacia la posición original
 void Hormiga::retornar(){
 	rotarFrac  ( -ultAngulo / (2 * PI) );
-	despl->desp( vectorDesp[0] / perimRueda );
+	despl->desp( getDespl()->getRatio() * vectorDesp[0] / perimRueda );
 	setEstado  (COMUNICANDO);
 }
 
 //lleva la hormiga hacia el azucar
 void Hormiga::seguir(){
-	rotarFrac  ( getVector()[0] / (2 * PI) );
+	rotarFrac  ( (float)getVector()[0] / (2 * PI) );
 	/*Nota: Agregar análisis de color*/
 	while(Ultrasonico() > getDist()){
 		getDespl()->desp(1);
@@ -109,11 +113,12 @@ void Hormiga::seguir(){
 }
 
 //Funciones de asignación****************************************************
-void Hormiga::setEstado      (  byte e      ){ estado = e;                } //establece el estado actual de trabajo
-void Hormiga::setVectorMod   (  double m    ){ vectorDesp[0] = m;         } //asigna el módulo del vector de desplazamiento
-void Hormiga::setVectorAng   (  double a    ){ vectorDesp[1] = a;         } //asigna el ángulo del vector de desplazamiento
-void Hormiga::calColor       (              ){ color = leerColor();       } //calibra el color a reconocer como azucar
-void Hormiga::toleranciaColor( int colorTol ){ this->colorTol = colorTol; } //establece la tolerancia para el sensor de color (por defecto = +-2)
+void Hormiga::setEstado      (  byte e      ){ estado         = e;           } //establece el estado actual de trabajo
+void Hormiga::setVectorMod   (  double m    ){ vectorDesp[0]  = m;           } //asigna el módulo del vector de desplazamiento
+void Hormiga::setVectorAng   (  double a    ){ vectorDesp[1]  = a;           } //asigna el ángulo del vector de desplazamiento
+void Hormiga::setUltAng      (  double a    ){ ultAngulo      = a;           } //asigna el ángulo de la última rotación
+void Hormiga::calColor       (              ){ color          = leerColor(); } //calibra el color a reconocer como azucar
+void Hormiga::toleranciaColor( int colorTol ){ this->colorTol = colorTol;    } //establece la tolerancia para el sensor de color (por defecto = +-2)
 
 //asigna valores al vector de desplazamiento
 void Hormiga::setVector(double m, double a){

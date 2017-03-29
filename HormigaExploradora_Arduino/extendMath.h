@@ -9,17 +9,9 @@
 #ifndef EXTEND_MATH_H
 #define EXTEND_MATH_H
 
-#include <math.h>
-
-#ifndef PI
-#define PI 3.1415926535897932
-#endif
+#include <Arduino.h>
 
 int gcd(int a, int b); //calculates the gratest common divisor between 2 numbers[gcd]
-
-//conversions between radians and degrees
-double deg2rad(double a);
-double rad2deg(double a);
 
 double normalizeAngle(double a); //normalize angle to 2 * PI
 

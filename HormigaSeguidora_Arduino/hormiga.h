@@ -26,14 +26,15 @@ class Hormiga {
 		bool    desplazar      ();                   //se desplaza una distancia definida a menos que exista un obstaculo
 		int     leerColor      ();                   //lee los datos del CNY
 		int     getPpg         ();                   //retorna el número de pasos por giro de la hormiga
-		void    rotarFrac      (float n);            //rota la hormiga una fracción de giro dada por "n"
 		void    calColor       ();                   //calibra el color a reconocer como azucar
 		void    toleranciaColor(int colorTol);       //establece la tolerancia para el sensor de color (por defecto = +-2)
 		void    setVector      (double m, double a); //asigna valores al vector de desplazamiento
 		void    setVectorMod   (double m);           //asigna el módulo del vector de desplazamiento
 		void    setVectorAng   (double a);           //asigna el ángulo del vector de desplazamiento
-		void    retornar       ();                   //retorna hacia la posición original
+		void    setUltAng      (double a);           //asigna el ángulo de la última rotación
+		void    rotarFrac      (float n);            //rota la hormiga una fracción de giro dada por "n"
 		void    setEstado      (byte e);             //establece el estado actual de trabajo
+		void    retornar       ();                   //retorna hacia la posición original
 		void    seguir         ();                   //lleva la hormiga hacia el azucar
     	double* getVector      ();                   //retorna el vector desplazamiento
     	float   Ultrasonico    ();                   //lee los datos del ultrasónico

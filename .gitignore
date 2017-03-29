@@ -31,3 +31,9 @@ $RECYCLE.BIN/
 #############
 *.pdsbak
 *.workspace
+
+#############
+## Compressed
+#############
+*.rar
+*.zip
