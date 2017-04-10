@@ -37,3 +37,8 @@ $RECYCLE.BIN/
 #############
 *.rar
 *.zip
+
+############################
+## Sublime Text 3 - Stino
+############################
+*.stino-settings

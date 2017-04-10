@@ -1,8 +1,8 @@
 /*
 * Periodo 2017-1
-* U.N.E.F.A. - Nï¿½cleo Caracas
-* Carrera: Ingenierï¿½a Electrï¿½nica
-* Materia: Introducciï¿½n a la Robï¿½tica
+* U.N.E.F.A. - N?cleo Caracas
+* Carrera: Ingenier?a Electr?nica
+* Materia: Introducci?n a la Rob?tica
 *
 * sincSteppers.h
 *
@@ -63,7 +63,7 @@ class SincSteps{
     void revInv(long nRev);            //rota los motores en direcciones opuestas vueltas completas
     int  getPasosDesp(byte nMotor);    //retorna el numero de pasos para que el motor referenciado por "nMotor" de 1 desplazamiento
     void setSpeed(unsigned long rpms); //establece la velocidad de los motores
-    int  getRatio();                   //retorna ratio de rotaciÃ³n
+    int  getRatio();                   //retorna ratio de rotación
     void Step(byte n, long steps);
     
   private:

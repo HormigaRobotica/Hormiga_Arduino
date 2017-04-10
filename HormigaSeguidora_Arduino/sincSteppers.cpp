@@ -1,8 +1,8 @@
 /*
 * Periodo 2017-1
-* U.N.E.F.A. - N�cleo Caracas
-* Carrera: Ingenier�a Electr�nica
-* Materia: Introducci�n a la Rob�tica
+* U.N.E.F.A. - N?cleo Caracas
+* Carrera: Ingenier?a Electr?nica
+* Materia: Introducci?n a la Rob?tica
 *
 * sincSteppers.cpp
 *

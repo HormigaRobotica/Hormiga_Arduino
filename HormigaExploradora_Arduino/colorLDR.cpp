@@ -1,8 +1,8 @@
 /*
 *	Periodo 2017-1
-*	U.N.E.F.A. - N�cleo Caracas
-*	Carrera: Ingenier�a Electr�nica
-*	Materia: Introducci�n a la Rob�tica
+*	U.N.E.F.A. - N?cleo Caracas
+*	Carrera: Ingenier?a Electr?nica
+*	Materia: Introducci?n a la Rob?tica
 *
 *	colorLDR.cpp
 *
@@ -11,7 +11,7 @@
 
 #include "colorLDR.h"
 
-#define NSAMP 5 //npumero de muestras a tomar por medición
+#define NSAMP 5 //npumero de muestras a tomar por medici?
 
 colorLDR::colorLDR(byte r, byte g, byte b, byte a){
 	pines[0] = r;
@@ -26,14 +26,15 @@ colorLDR::colorLDR(byte r, byte g, byte b, byte a){
 	}
 }
 
+//calibra la lectura de los sensores
 void colorLDR::calibrar(){
 	for(int i=0; i < 3 ;i++){
 		digitalWrite(i, LOW);
 		cal.negro[i] = cal.blanco[i] = 0;
 	}
 	delay(10);
-  
-  //calibrar negro
+
+	//calibrar negro
 	for(int i=0; i < 3; i++){
 		for(int j=0; j < NSAMP; j++)
 			cal.negro[i] += analogRead(pines[3]);
@@ -53,11 +54,12 @@ void colorLDR::calibrar(){
 	}
 }
 
+//lee los datos del sensor
 int* colorLDR::leerColor(){
 	for(int i=0; i < 3; i++){
 		color[i] = 0;
 
-		digitalWrite(pines[3], HIGH);
+		digitalWrite(pines[i], HIGH);
 		delay(10);
 
 		for(int j=0; j < NSAMP; j++)
@@ -65,8 +67,30 @@ int* colorLDR::leerColor(){
 		color[i] /= NSAMP;
 		color[i] = map(color[i], cal.negro[i], cal.blanco[i], 0, 255);
 
-		digitalWrite(i, LOW);
+		digitalWrite(pines[i], LOW);
 	}
 
 	return color;
+}
+
+//compara 2 colores
+bool colorLDR::compColor(int* a, int* b){
+	int c = 0;
+
+	for(int i=0; i<3; i++){
+		c += (a[i] == b[i]) ? 1 : 0;
+	}
+
+	return (c == 3) ? true : false;
+}
+
+//compara 2 colores dentro de un margen de tolerancia
+bool colorLDR::compColor(int* a, int* b, byte tol){ 
+	int c = 0;
+
+	for(int i=0; i<3; i++){
+		c += (a[i] <= (b[i] + tol) && a[i] >= (b[i] - tol)) ? 1 : 0;
+	}
+
+	return (c == 3) ? true : false;
 }

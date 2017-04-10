@@ -1,8 +1,8 @@
 /*
 *	Periodo 2017-1
-*	U.N.E.F.A. - N�cleo Caracas
-*	Carrera: Ingenier�a Electr�nica
-*	Materia: Introducci�n a la Rob�tica
+*	U.N.E.F.A. - N?cleo Caracas
+*	Carrera: Ingenier?a Electr?nica
+*	Materia: Introducci?n a la Rob?tica
 *
 *	colorLDR.h
 *
@@ -19,11 +19,13 @@ public:
 	colorLDR(byte r, byte g, byte b, byte a);
 	void calibrar();
 	int* leerColor();
+	bool compColor(int* a, int* b);
+	bool compColor(int* a, int* b, byte tol);
 
 private:
-	byte pines[4]; //almacena los pines a usar con el sensor {r,g,b,analogico}
-	int  color[3]; //almacena el último color leido
-	struct maxCols {   //almacena los colores "blanco y negro" para calibración
+	byte   pines[4]; //almacena los pines a usar con el sensor {r,g,b,analogico}
+	int    color[3]; //almacena el ultimo color leido
+	struct maxCols { //almacena los colores "blanco y negro" para calibraci�n
 		int blanco[3], negro [3];
 	}cal;
 };
