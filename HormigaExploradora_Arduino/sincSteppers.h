@@ -17,60 +17,66 @@
 #include "extendMath.h"
 
 class SincSteps{
-  public:
-    // Constructor Sobrecargado
-    SincSteps(const int pasosRev1,
-      byte pin1Motor1,
-      byte pin2Motor1,
-      const int pasosRev2,
-      byte pin1Motor2,
-      byte pin2Motor2);
+	public:
+		// Constructor Sobrecargado
+		SincSteps(const int pasosRev1,
+			byte pin1Motor1,
+			byte pin2Motor1,
+			const int pasosRev2,
+			byte pin1Motor2,
+			byte pin2Motor2);
 
-    SincSteps(const int pasosRev1,
-      byte pin1Motor1,
-      byte pin2Motor1,
-      byte pin3Motor1,
-      byte pin4Motor1,
-      const int pasosRev2,
-      byte pin1Motor2,
-      byte pin2Motor2,
-      byte pin3Motor2,
-      byte pin4Motor2);
+		SincSteps(const int pasosRev1,
+			byte pin1Motor1,
+			byte pin2Motor1,
+			byte pin3Motor1,
+			byte pin4Motor1,
+			const int pasosRev2,
+			byte pin1Motor2,
+			byte pin2Motor2,
+			byte pin3Motor2,
+			byte pin4Motor2);
 
-    SincSteps(const int pasosRev1,
-      byte pin1Motor1,
-      byte pin2Motor1,
-      byte pin3Motor1,
-      byte pin4Motor1,
-      const int pasosRev2,
-      byte pin1Motor2,
-      byte pin2Motor2);
+		SincSteps(const int pasosRev1,
+			byte pin1Motor1,
+			byte pin2Motor1,
+			byte pin3Motor1,
+			byte pin4Motor1,
+			const int pasosRev2,
+			byte pin1Motor2,
+			byte pin2Motor2);
 
-    SincSteps(const int pasosRev1,
-      byte pin1Motor1,
-      byte pin2Motor1,
-      const int pasosRev2,
-      byte pin1Motor2,
-      byte pin2Motor2,
-      byte pin3Motor2,
-      byte pin4Motor2);
-    // Fin Constructor Sobrecargado
+		SincSteps(const int pasosRev1,
+			byte pin1Motor1,
+			byte pin2Motor1,
+			const int pasosRev2,
+			byte pin1Motor2,
+			byte pin2Motor2,
+			byte pin3Motor2,
+			byte pin4Motor2);
+		// Fin Constructor Sobrecargado
 
-    void calcPasosDesp(const int pasosRev1, const int pasosRev2); //calcula el numero de pasos requerido para un desplazamiento uniforme
-    void desp(long nDesp);             //rota cada uno de los motores hasta llegar al desplazamiento requerido
-    void rev(long nRev);               //rota los motores vueltas completas
-    void despInv(long nDesp);          //rota cada uno de los motores en direcciones opuestas hasta llegar al desplazamiento requerido
-    void revInv(long nRev);            //rota los motores en direcciones opuestas vueltas completas
-    int  getPasosDesp(byte nMotor);    //retorna el numero de pasos para que el motor referenciado por "nMotor" de 1 desplazamiento
-    void setSpeed(unsigned long rpms); //establece la velocidad de los motores
-    int  getRatio();                   //retorna ratio de rotación
-    void Step(byte n, long steps);
-    
-  private:
-    byte motor[2][6];
-    int pasosDesp[2];
-    unsigned long rpms;
-    int ratio;
+		void calcPasosDesp(const int pasosRev1, const int pasosRev2); //calcula el numero de pasos requerido para un desplazamiento uniforme
+
+		void desp    (long nDesp); //rota cada uno de los motores hasta llegar al desplazamiento requerido
+		void rev     (long nRev ); //rota los motores vueltas completas
+		void despInv (long nDesp); //rota cada uno de los motores en direcciones opuestas hasta llegar al desplazamiento requerido
+		void revInv  (long nRev ); //rota los motores en direcciones opuestas vueltas completas
+
+		void setSpeed (unsigned long rpms); //establece la velocidad de los motores
+		void Step     (byte n, long steps); //rota al motor "n" el numero de pasos indicados por "steps"
+
+		void setEnPin (byte n, byte enPin); //establece el pin de activación de los motores
+
+		int  getPasosDesp (byte nMotor); //retorna el numero de pasos para que el motor referenciado por "nMotor" de 1 desplazamiento
+		int  getRatio     ();            //retorna ratio de rotación
+		
+	private:
+		unsigned long rpms;
+		byte motor[2][7];
+		int pasosDesp[2];
+		int ratio;
+		
 };
 
 #endif

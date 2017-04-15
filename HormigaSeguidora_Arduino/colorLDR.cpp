@@ -34,24 +34,47 @@ void colorLDR::calibrar(){
 	}
 	delay(10);
 
-	//calibrar negro
-	for(int i=0; i < 3; i++){
-		for(int j=0; j < NSAMP; j++)
-			cal.negro[i] += analogRead(pines[3]);
-		cal.negro[i] /= NSAMP;
-	}
+	for (;;){
+		if (Serial.available() > 0){
+			switch(Serial.read()){
+				case 'w':
+					//calibrar blanco
+					for(int i=0; i < 3 ;i++){
+						digitalWrite(pines[i], HIGH);
+						delay(10);
+						cal.blanco[i] = 0;
 
-	//calibrar blanco
-	for(int i=0; i < 3 ;i++){
-		digitalWrite(pines[i], HIGH);
-		delay(10);
+						for(int j=0; j < NSAMP; j++)
+							cal.blanco[i] += analogRead(A0);
+						cal.blanco[i] /= NSAMP;
 
-		for(int j=0; j < NSAMP; j++)
-			cal.blanco[i] += analogRead(pines[3]);
-		cal.blanco[i] /= NSAMP;
+						digitalWrite(pines[i], LOW);
+					}
 
-		digitalWrite(pines[i], LOW);
-	}
+					PRINT_COLOR(cal.blanco);
+					break;
+				case 'b':
+					//calibrar negro
+					for(int i=0; i < 3 ;i++){
+						digitalWrite(pines[i], HIGH);
+						delay(10);
+						cal.negro[i] = 0;
+
+						for(int j=0; j < NSAMP; j++)
+							cal.negro[i] += analogRead(A0);
+
+						cal.negro[i] /= NSAMP;
+
+						digitalWrite(pines[i], LOW);
+					}
+
+					PRINT_COLOR(cal.negro);
+					break;
+				case 'y':
+					return;
+			};
+		}
+	}			
 }
 
 //lee los datos del sensor
@@ -75,22 +98,24 @@ int* colorLDR::leerColor(){
 
 //compara 2 colores
 bool colorLDR::compColor(int* a, int* b){
-	int c = 0;
+	double c = 0;
 
 	for(int i=0; i<3; i++){
-		c += (a[i] == b[i]) ? 1 : 0;
+		c += sq(a[i] - b[i]);
 	}
+	c = sqrt(c);
 
-	return (c == 3) ? true : false;
+	return (c < 2) ? true : false;
 }
 
 //compara 2 colores dentro de un margen de tolerancia
 bool colorLDR::compColor(int* a, int* b, byte tol){ 
-	int c = 0;
+	double c = 0;
 
 	for(int i=0; i<3; i++){
-		c += (a[i] <= (b[i] + tol) && a[i] >= (b[i] - tol)) ? 1 : 0;
+		c += sq(a[i] - b[i]);
 	}
+	c = sqrt(c);
 
-	return (c == 3) ? true : false;
+	return (c < tol) ? true : false;
 }

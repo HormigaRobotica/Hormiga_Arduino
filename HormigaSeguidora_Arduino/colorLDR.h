@@ -14,6 +14,16 @@
 
 #include <Arduino.h>
 
+//DEBUG SNIPPETS ******************************************
+
+#define PRINT_COLOR(c) { \
+		Serial.print("r: "    ); Serial.print  (c[0]); \
+		Serial.print("    g: "); Serial.print  (c[1]); \
+		Serial.print("    b: "); Serial.println(c[2]); \
+	}
+
+//Fin: DEBUG SNIPPETS *************************************
+
 class colorLDR{
 public:
 	colorLDR(byte r, byte g, byte b, byte a);
@@ -25,7 +35,7 @@ public:
 private:
 	byte   pines[4]; //almacena los pines a usar con el sensor {r,g,b,analogico}
 	int    color[3]; //almacena el ultimo color leido
-	struct maxCols { //almacena los colores "blanco y negro" para calibración
+	struct maxCols { //almacena los colores "blanco y negro" para calibraci?
 		int blanco[3], negro [3];
 	}cal;
 };
