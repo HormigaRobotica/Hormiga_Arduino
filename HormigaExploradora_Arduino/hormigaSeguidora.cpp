@@ -73,6 +73,7 @@ void HormigaSeguidora::trabajar(){
 			break;
 		case ENCONTRADA:
 			retornar();
+			setEstado(ESPERANDO);
 			break;
 	};
 }

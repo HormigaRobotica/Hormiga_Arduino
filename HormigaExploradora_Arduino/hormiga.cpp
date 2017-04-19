@@ -15,6 +15,25 @@
 #define TOL_COLOR 10 //tolerancia inicial en los valores de color
 #define testDist(u, d) ((u) <= (d) && (u) >= 0)
 
+//codigos para comandos de calibracion *****************************************
+#define ULTRASOUNDCORR_INC 0
+#define ULTRASOUNDCORR_DEC 1
+#define ULTRASOUNDCORR_SET 2
+#define ULTRASOUND_SET 3
+#define COLORTOL_INC 4
+#define COLORTOL_DEC 5
+#define COLORTOL_SET 6
+#define COLOR_TEST 7
+#define COLOR_SET 8
+#define CMD_END 15
+
+#define CMD_SET_SIZE 4
+#define CMD_SET_MAX 15
+
+#define CMD_ERR -1
+#define CMD_ERR_MSG "Error: el valor introducido no se reconoce como un comando valido"
+//Fin: codigos para comandos de calibracion ************************************
+
 //Constructores: Hormiga ******************************************
 
 Hormiga::Hormiga(
@@ -78,6 +97,7 @@ bool Hormiga::testColor(){
 		estado = ENCONTRADA;
 		return true;
 	}
+	return false;
 }
 
 //mide la distancia entre el ultrasonico y un obst?ulo
@@ -94,52 +114,140 @@ float Hormiga::Ultrasonico(){
 
 //calibra la hormiga
 void Hormiga::calHormiga(){
-	float us;
-	for (int i = 0; i < 3;){
-		switch(i){
-			case 0:
-				us = Ultrasonico();
-				if (us >= 0){
-					setDist(us);
-					PRINT_ULTRAS(us);
-				}
-				break;
-			case 1:
-				setColor(RGB->leerColor());
-
-				PRINT_ULTRAS_Y_COLOR(us, color);
-				break;
-			case 2:
-				Serial.print("tolerancia: ");
-				Serial.println(getColorTol());
-
-				Serial.print((testColor()) ? "Color Encontrado!!" : "NO es el Color");
-				Serial.print("Ref: ");
-				PRINT_COLOR(color);
-				break;
-		};
-		delay(100);
-
+	Serial.println("Bienvenido a la interfaz de calibracion");
+	for (;;){
 		if (Serial.available() > 0){
-			switch(Serial.read()){
-				case 'y': 
-					i++;
-					break;
-				case '+':
-					if(i == 0)
-						factorCorr += (i == 0) ? 0.1 : 0;
-					else if (i==2)
+			int cmdCode;
+			String cmd = Serial.readString();
+
+			cmd.trim();
+			cmdCode = calCmdParser(&cmd);
+
+			if(cmdCode == CMD_ERR){
+				Serial.println(CMD_ERR_MSG);
+			}
+			else{
+				switch(cmdCode & CMD_SET_MAX){
+					case ULTRASOUNDCORR_INC: 
+						factorCorr += 0.1;
+						PRINT_ULTRAS(Ultrasonico());
+						break;
+					case ULTRASOUNDCORR_DEC:
+						factorCorr -= 0.1;
+						PRINT_ULTRAS(Ultrasonico());
+						break;
+					case ULTRASOUNDCORR_SET:
+						factorCorr = cmd.toFloat();
+						break;
+					case ULTRASOUND_SET:
+						dist = Ultrasonico();
+						PRINT_ULTRAS(dist);
+						break;
+					case COLORTOL_INC:
 						toleranciaColor(getColorTol() + 1);
-					break;
-				case '-':
-					if(i == 0)
-						factorCorr -= (i == 0) ? 0.1 : 0;
-					else if (i==2)
+
+						Serial.print("tolerancia: ");
+						Serial.println(getColorTol());
+						Serial.print((testColor()) ? "Color Encontrado!! " : "NO es el Color ");
+						Serial.print("Ref: ");
+						PRINT_COLOR(color);
+						break;
+					case COLORTOL_DEC:
 						toleranciaColor(getColorTol() - 1);
-					break;
-			};
+
+						Serial.print("tolerancia: ");
+						Serial.println(getColorTol());
+						Serial.print((testColor()) ? "Color Encontrado!! " : "NO es el Color ");
+						Serial.print("Ref: ");
+						PRINT_COLOR(color);
+						break;
+					case COLORTOL_SET:
+						toleranciaColor(cmdCode >> CMD_SET_SIZE);
+
+						Serial.print("tolerancia: ");
+						Serial.println(getColorTol());
+						Serial.print((testColor()) ? "Color Encontrado!! " : "NO es el Color ");
+						Serial.print("Ref: ");
+						PRINT_COLOR(color);
+						break;
+					case COLOR_TEST:
+						while(!(Serial.available() > 0)){
+							Serial.print((testColor()) ? "Color Encontrado!! " : "NO es el Color ");
+							Serial.print("Ref: ");
+							PRINT_COLOR(color);
+						}
+						break;
+					case COLOR_SET:
+						setColor(RGB->leerColor());
+						PRINT_COLOR(color);
+						break;
+					case CMD_END:
+						Serial.println("Calibracion finalizada");
+						return;
+				};
+			}
 		}
+
+		delay(500);
 	}
+}
+
+//retorna el código del comando a revisar
+int Hormiga::calCmdParser(String* cmd){
+	int retval = CMD_ERR;
+
+	cmd->toLowerCase();
+	
+	Serial.println(*cmd);
+	
+	if(cmd->startsWith("ultras ")){
+		cmd->remove(0, 6);
+		cmd->trim();
+		
+		//Serial.println(*cmd);
+
+		if(cmd->startsWith("c ")){
+			cmd->remove(0, 1);
+			cmd->trim();
+
+			if(cmd->equals("++"))
+				retval = ULTRASOUNDCORR_INC;
+			else if(cmd->equals("--"))
+				retval = ULTRASOUNDCORR_DEC;
+			else
+				retval = ULTRASOUNDCORR_SET + (cmd->toInt() << CMD_SET_SIZE);
+		}
+		else if(cmd->equals("s"))
+			retval = ULTRASOUND_SET;
+	}
+	else if(cmd->startsWith("color ")){
+		cmd->remove(0, 5);
+		cmd->trim();
+		
+		//Serial.println(*cmd);
+
+		if(cmd->startsWith("t ")){
+			cmd->remove(0, 1);
+			cmd->trim();
+
+			if(cmd->equals("++"))
+				retval = COLORTOL_INC;
+			else if(cmd->equals("--"))
+				retval = COLORTOL_DEC;
+			else{
+				retval = COLORTOL_SET + (cmd->toInt() << CMD_SET_SIZE);
+				//Serial.println(retval, HEX);
+			}
+		}
+		else if(cmd->equals("p"))
+			retval = COLOR_TEST;
+		else if(cmd->equals("s"))
+			retval = COLOR_SET;
+	}
+	else if(cmd->equals("fin"))
+		retval = CMD_END;
+
+	return retval;
 }
 
 //escoge de forma aleatoria una direcci? hacia la cual ir
@@ -237,7 +345,7 @@ void Hormiga::setVector(double m, double a){
 
 //Funciones para valores en variables****************************************
 byte       Hormiga::getEstado    (){ return estado;     } //retorna el estado de trabajo actual
-int        Hormiga::getColorTol  (){ return colorTol    } //retorna el valor de tolerancia para las mediciones de color
+int        Hormiga::getColorTol  (){ return colorTol;    } //retorna el valor de tolerancia para las mediciones de color
 int        Hormiga::getPpg       (){ return ppg;        } //retorna el n?mero de pasos por giro de la hormiga
 float      Hormiga::getPerimRueda(){ return perimRueda; } //retorna el perimetro de las ruedas
 float      Hormiga::getPerimRobot(){ return perimRobot; } //retorna el perimetro de la hormiga

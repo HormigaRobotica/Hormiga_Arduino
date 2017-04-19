@@ -1,0 +1,32 @@
+#define ULTRASOUNDCORR_INC 0
+#define ULTRASOUNDCORR_DEC 1
+#define ULTRASOUNDCORR_SET 2
+#define ULTRASOUND_SET 3
+#define COLORTOL_INC 4
+#define COLORTOL_DEC 5
+#define COLORTOL_SET 6
+#define COLOR_SET 7
+#define COLOR_TEST 8
+#define CMD_END 15
+
+"n": número
+
+//Comandos para Ultrasonido
+	//factor de corrección del ultrasónico
+		ultras c ++  //incrementar
+		ultras c --  //decrementar
+		ultras c n   //establecer
+	//distancia de detección del ultrasónico
+		ultras s     //establecer
+
+//Comandos para Color
+	//tolerancia de color
+		color t ++  //incrementar
+		color t --  //decrementar
+		color t n   //establecer
+		color p     //probar
+	//color a detectar
+		color s     //establecer
+
+//finalizar calibración
+fin

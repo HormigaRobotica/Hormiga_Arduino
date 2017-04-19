@@ -81,6 +81,8 @@ class Hormiga {
 			colorLDR* RGB      ,
 			float     diamRueda, float anchoRobot);
 
+		int calCmdParser(String* cmd); //retorna el código del comando a revisar
+
 	private:
 		SincSteps* despl; //puntero a la instancia para la sinsronizaci? de los motores
 		colorLDR*  RGB;   //puntero a la instancia del sensor de color
