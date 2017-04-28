@@ -27,6 +27,8 @@
 #define COLOR_SET 8
 #define CMD_END 15
 
+#define TEST_DIST_CONTA 4
+
 #define CMD_SET_SIZE 4
 #define CMD_SET_MAX 15
 
@@ -58,6 +60,8 @@ Hormiga::Hormiga(
 
 	ppg = perimRobot * despl->getRatio() / perimRueda;/*112*/
 	
+	mem.conta = 1;
+	mem.overfVal = mem.datos[0][1] = mem.datos[0][0] = 0;
 
 	vectorDesp[0] = vectorDesp[1] = 0;
 	randomSeed(analogRead(A4));
@@ -81,6 +85,9 @@ Hormiga::Hormiga(
 	pinMode(echoPin, INPUT);
 
 	ppg = perimRobot * despl->getRatio() / perimRueda;/*112*/
+
+	mem.conta = 1;
+	mem.overfVal = mem.datos[0][1] = mem.datos[0][0] = 0;
 
 	vectorDesp[0] = vectorDesp[1] = 0;
 	randomSeed(analogRead(A4));
@@ -250,9 +257,44 @@ int Hormiga::calCmdParser(String* cmd){
 	return retval;
 }
 
+//revisa si el area actual ya existe en la memoria
+bool Hormiga::existeEnMem(float x, float y){
+	float len, d[2];
+
+	for (byte i = 1; i < mem.conta; ++i){
+		for (byte j = 0; j < 2; ++j){
+			//distancias entre los vertices y el punto
+			d[0] = (j ? y:x) - mem.datos[i-1][j];
+			d[1] = (j ? y:x) - mem.datos[i][j];
+			d[0] = abs(d[0]);
+			d[1] = abs(d[1]);
+
+			//longitudes horizontal y vertical del rectangulo
+			len = mem.datos[i-1][j] - mem.datos[i][j];
+			len = abs(len);
+			
+			if(len > d[0] && len > d[1])
+				if(j==1) return true;
+			else
+				break;
+		}
+	}
+	return false;
+}
+
 //escoge de forma aleatoria una direcci? hacia la cual ir
 float Hormiga::escogeDir(){
-	float fracCirc = (random(2) ? 1 : -1) * random(3) / 8.0; //genera la fracci? del circulo sobre el cual se va a rotar
+	double x, y, fracCirc;
+
+	for (int i = 0; i < 8; ++i){
+		fracCirc = (random(2) ? 1 : -1) * random(3) / 8.0; //genera la fracci? del circulo sobre el cual se va a rotar
+
+		addVectorsPolar<double>(vectorDesp[0], vectorDesp[1], ROTAC_FRAC, 2 * PI * fracCirc, &x, &y);
+
+		toCartesian(x, y, &x, &y);
+
+		if(!existeEnMem(x, y)) break;
+	}
 
 	rotarFrac((float)fracCirc);
 
@@ -269,7 +311,24 @@ bool Hormiga::desplazar(){
 	//rota una distancia definida siempre que encuentre un obst?ulo
 	us = Ultrasonico();
 	while(testDist(us, dist)){
-		if (testColor()) return true;
+		for (int j = 0; j < TEST_DIST_CONTA; ++j){
+			if (testColor()){
+				addVectorsPolar<double>(vectorDesp[0], vectorDesp[1], 0, ultAngulo, vectorDesp, vectorDesp + 1);
+				return true;
+			}
+
+			float d = dist / TEST_DIST_CONTA;
+			int val  = (despl->getRatio() * d) / getPerimRueda();
+
+			despl->desp(val);
+
+			if(j < (TEST_DIST_CONTA - 1))
+				vectorDesp[0] += d;
+			else{
+				despl->desp(-(val * j));
+				vectorDesp[0] -= d *  j;
+			}
+		}
 
 		rotarFrac(1.0/8.0);
 		ultAngulo = normalizeAngle(ultAngulo + PI/4);
@@ -280,9 +339,23 @@ bool Hormiga::desplazar(){
 	for (i = 0; i < despl->getRatio() * ROTAC_FRAC; ++i){
 		us = Ultrasonico();
 		if(testDist(us, dist)){
-			if (testColor()){
-				addVectorsPolar(vectorDesp[0], vectorDesp[1], perimRueda * (i/despl->getRatio()), ultAngulo, vectorDesp, vectorDesp + 1);
-				return true;
+			for (int j = 0; j < TEST_DIST_CONTA; ++j){
+				if (testColor()){
+					addVectorsPolar<double>(vectorDesp[0], vectorDesp[1], perimRueda * (i/despl->getRatio()), ultAngulo, vectorDesp, vectorDesp + 1);
+					return true;
+				}
+
+				float d = dist / TEST_DIST_CONTA;
+				int val  = (despl->getRatio() * d) / getPerimRueda();
+
+				despl->desp(val);
+				
+				if(j < (TEST_DIST_CONTA - 1))
+					vectorDesp[0] += d;
+				else{
+					despl->desp(-(val * j));
+					vectorDesp[0] -= d *  j;
+				}
 			}
 
 			break;
@@ -290,13 +363,25 @@ bool Hormiga::desplazar(){
 		despl->desp(1);
 	}
 
-	addVectorsPolar(vectorDesp[0], vectorDesp[1], perimRueda * (i/despl->getRatio()), ultAngulo, vectorDesp, vectorDesp + 1);
+	addVectorsPolar<double>(vectorDesp[0], vectorDesp[1], perimRueda * (i/despl->getRatio()), ultAngulo, vectorDesp, vectorDesp + 1);
+
+	if(mem.conta < HORMIGA_MEM){
+		mem.datos[mem.conta][0] = vectorDesp[0];
+		mem.datos[mem.conta][1] = vectorDesp[1];
+		mem.conta++;
+	}
+	else{
+		mem.datos[mem.overfVal][0] = vectorDesp[0];
+		mem.datos[mem.overfVal][1] = vectorDesp[1];
+		mem.overfVal = (mem.overfVal < (HORMIGA_MEM - 1)) ? mem.overfVal + 1 : 0;
+	}
+
 	return false;
 }
 
 //retorna hacia la posici? original
 void Hormiga::retornar(){
-	rotarFrac  ( -ultAngulo / (2 * PI) );
+	rotarFrac  ( 0.5 + (ultAngulo / (2 * PI)) );
 	despl->desp( getDespl()->getRatio() * vectorDesp[0] / perimRueda );
 	setEstado  (COMUNICANDO);
 }

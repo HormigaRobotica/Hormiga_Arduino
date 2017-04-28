@@ -121,9 +121,9 @@ void SincSteps::calcPasosDesp(const int pasosRev1, const int pasosRev2){
 
 //rota cada uno de los motores hasta llegar al desplazamiento requerido
 void SincSteps::desp(long nDesp){
-	for (long i = 0; i < nDesp; ++i){
-		Step(0, pasosDesp[0]);
-		Step(1, pasosDesp[1]);
+	for (long i = 0; i < abs(nDesp); ++i){
+		Step(0, ((nDesp < 0) ? -1 : 1) * pasosDesp[0]);
+		Step(1, ((nDesp < 0) ? -1 : 1) * pasosDesp[1]);
 	}
 }
 

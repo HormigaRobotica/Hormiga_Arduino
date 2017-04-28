@@ -18,6 +18,8 @@
 #define COMUNICANDO 3
 #define SIGUIENDO   4
 
+#define HORMIGA_MEM 100
+
 //DEBUG SNIPPETS ******************************************
 
 #define PRINT_ULTRAS(u) { Serial.print("Ultrasonico: "); Serial.println(u); }
@@ -49,6 +51,8 @@ class Hormiga {
 		//establece el color a comparar
 		void setColor(int* col);
 		void setColor(int r, int g, int b);
+
+		bool existeEnMem (float x, float y); //revisa si el area actual ya existe en la memoria
 		
 		double* getVector     (); //retorna el vector desplazamiento
 		float   Ultrasonico   (); //lee los datos del ultras?ico
@@ -102,5 +106,12 @@ class Hormiga {
 
 		const float perimRueda; //perimetro de las ruedas
 		const float perimRobot; //perimetro del robot
+
+		//memoria de la hormiga
+		struct memoria{
+			float  datos[HORMIGA_MEM][2];
+			byte   conta;
+			byte   overfVal;
+		} mem;
 };
 #endif
