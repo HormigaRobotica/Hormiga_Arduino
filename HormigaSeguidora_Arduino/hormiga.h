@@ -38,6 +38,8 @@ class Hormiga {
 		bool testColor (); //lee y compara el color actual con el color en memoria
 		int  getPpg    (); //retorna el n?mero de pasos por giro de la hormiga
 
+		double calcAngRotacion(int pasos); //dado el numero de pasos retorna el ángulo de rotación
+
 		void toleranciaColor(int colorTol); //establece la tolerancia para el sensor de color (por defecto = +-2)
 
 		void setVector    (double m, double a); //asigna valores al vector de desplazamiento
@@ -45,9 +47,9 @@ class Hormiga {
 		void setVectorAng (double a); //asigna el ?gulo del vector de desplazamiento
 		void setUltAng    (double a); //asigna el ?gulo de la ?ltima rotaci?
 		void rotarFrac    (float  n); //rota la hormiga una fracci? de giro dada por "n"
-		void setEstado    (byte   e); //establece el estado actual de trabajo
 		void setDist      (float  d); //establece la distancia a la que se detectan obstaculos
 		void setUltrasCorr(float  c); //establece el factor de corrección del ultrasonido
+		void setEstado    (byte   e); //establece el estado actual de trabajo
 		
 		//establece el color a comparar
 		void setColor(int* col);

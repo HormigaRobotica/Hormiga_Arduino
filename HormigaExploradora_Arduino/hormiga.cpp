@@ -339,23 +339,27 @@ bool Hormiga::existeEnMem(float x, float y){
 	return false;
 }
 
+//dado el numero de pasos retorna el ángulo de rotación
+double Hormiga::calcAngRotacion(int pasos){ return 2 * PI * perimRueda * pasos / (perimRobot * despl->getRatio()); }
+
 //escoge de forma aleatoria una direcci? hacia la cual ir
 float Hormiga::escogeDir(){
-	double x, y, fracCirc;
+	double x, y;
+	int pasos;
 
-	for (int i = 0; i < 8; ++i){
-		fracCirc = (random(2) ? 1 : -1) * random(3) / 8.0; //genera la fracci? del circulo sobre el cual se va a rotar
+	for (byte i = 0; i < 16; ++i){
+		pasos = (random(2) ? 1 : -1) * random(despl->getRatio() / 2); //genera la fracci? del circulo sobre el cual se va a rotar
 
-		addVectorsPolar<double>(vectorDesp[0], vectorDesp[1], ROTAC_FRAC, 2 * PI * fracCirc, &x, &y);
+		addVectorsPolar<double>(vectorDesp[0], vectorDesp[1], ROTAC_FRAC, calcAngRotacion(pasos), &x, &y);
 
 		toCartesian(x, y, &x, &y);
 
 		if(!existeEnMem(x, y)) break;
 	}
 
-	rotarFrac((float)fracCirc);
+	despl->despInv(pasos);
 
-	return 2 * PI * fracCirc; //retorna el ?gulo de rotaci? de la hormiga
+	return calcAngRotacion(pasos); //retorna el ?gulo de rotaci? de la hormiga
 }
 
 //se desplaza una distancia definida a menos que exista un obstaculo

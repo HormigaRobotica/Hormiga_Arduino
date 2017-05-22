@@ -16,8 +16,8 @@
 //NOTA: El pin 3 esta reservado para el emisor infrarrojo
 
 #define PPR         48 // cambiar esto al numero de pasos por revolucion del motor a usar
-#define ANCHO_ROBOT 14 //ancho del robot (distancia entre las ruedas) [cm]
-#define DIAM_RUEDA   6 //diametro de las ruedas [cm]
+#define ANCHO_ROBOT 10.5 //ancho del robot (distancia entre las ruedas) [cm]
+#define DIAM_RUEDA   5.8 //diametro de las ruedas [cm]
 
 #define LDR         A0 //pin del transistor del sensor de color
 #define ULTRAS_ECHO 13 //Pin "Echo" del sensor ultrasónico
@@ -44,5 +44,5 @@ void loop() {
 	hormiga.trabajar();
 	Serial.println(hormiga.getEstado());
 
-	delay(500);
+	delay(1000);
 }

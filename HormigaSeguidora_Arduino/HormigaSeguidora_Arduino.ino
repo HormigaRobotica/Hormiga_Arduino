@@ -13,8 +13,8 @@
 #include "hormigaSeguidora.h"
 
 #define PPR       200   //pasos por revolucion para los motores
-#define distRuedas 16   //distancia entre las ruedas [cm]
-#define diamRueda   6   //diametro de la rueda [cm]
+#define distRuedas 15.15   //distancia entre las ruedas [cm]
+#define diamRueda   5.8   //diametro de la rueda [cm]
 
 #define LDR       A0 //pin de la LDR del sensor de color
 #define trigPin   12 //pin "Trigger" del sensor ultras?ico
@@ -45,6 +45,7 @@ void setup() {
 
 void loop() {
 	hormiga.trabajar();
+	Serial.println(hormiga.getEstado());
 
 	delay(100);
 }
