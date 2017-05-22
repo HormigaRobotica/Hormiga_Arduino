@@ -16,6 +16,7 @@
 		ultras c ++  //incrementar
 		ultras c --  //decrementar
 		ultras c n   //establecer
+		ultras p     //probar
 	//distancia de detección del ultrasónico
 		ultras s     //establecer
 
@@ -27,6 +28,9 @@
 		color p     //probar
 	//color a detectar
 		color s     //establecer
+
+//ayuda para calibración {NO IMPLEMENTADO}
+[? || help || ayuda]
 
 //finalizar calibración
 fin

@@ -47,6 +47,7 @@ class Hormiga {
 		void rotarFrac    (float  n); //rota la hormiga una fracci? de giro dada por "n"
 		void setEstado    (byte   e); //establece el estado actual de trabajo
 		void setDist      (float  d); //establece la distancia a la que se detectan obstaculos
+		void setUltrasCorr(float  c); //establece el factor de corrección del ultrasonido
 		
 		//establece el color a comparar
 		void setColor(int* col);

@@ -12,21 +12,26 @@
 #include "hormiga.h"
 
 #define ROTAC_FRAC 1/2 //fracci? de vuelta por desplazamiento
-#define TOL_COLOR 10 //tolerancia inicial en los valores de color
+#define TOL_COLOR 35 //tolerancia inicial en los valores de color
 #define testDist(u, d) ((u) <= (d) && (u) >= 0)
 
 //codigos para comandos de calibracion *****************************************
 #define ULTRASOUNDCORR_INC 0
 #define ULTRASOUNDCORR_DEC 1
 #define ULTRASOUNDCORR_SET 2
-#define ULTRASOUND_SET 3
-#define COLORTOL_INC 4
-#define COLORTOL_DEC 5
-#define COLORTOL_SET 6
-#define COLOR_TEST 7
-#define COLOR_SET 8
+#define ULTRASOUND_TEST 3
+#define ULTRASOUND_SET 4
+
+#define COLORTOL_INC 5
+#define COLORTOL_DEC 6
+#define COLORTOL_SET 7
+#define COLOR_TEST 8
+#define COLOR_SET 9
+
+#define CMD_HELP 14
 #define CMD_END 15
 
+//CONFIGURACION PARA CALIBRACION
 #define TEST_DIST_CONTA 4
 
 #define CMD_SET_SIZE 4
@@ -34,6 +39,36 @@
 
 #define CMD_ERR -1
 #define CMD_ERR_MSG "Error: el valor introducido no se reconoce como un comando valido"
+
+/*
+#define CMD_HELP_MSG "\"n\": número\n" \
+	"\n" \
+	"//Comandos para Ultrasonido\n" \
+	"    //factor de corrección del ultrasónico\n" \
+	"        ultras c ++  //incrementar\n" \
+	"        ultras c --  //decrementar\n" \
+	"        ultras c n   //establecer\n" \
+	"        ultras p     //probar\n" \
+	"    //distancia de detección del ultrasónico\n" \
+	"        ultras s     //establecer\n" \
+	"\n" \
+	"//Comandos para Color\n" \
+	"    //tolerancia de color\n" \
+	"        color t ++  //incrementar\n" \
+	"        color t --  //decrementar\n" \
+	"        color t n   //establecer\n" \
+	"        color p     //probar\n" \
+	"    //color a detectar\n" \
+	"        color s     //establecer\n" \
+	"\n" \
+	"//ayuda para calibración\n" \
+	"[? || help || ayuda]" \
+	"\n" \
+	"//finalizar calibración\n" \
+	"fin\n"
+*/
+//FIN: CONFIGURACION PARA CALIBRACION
+
 //Fin: codigos para comandos de calibracion ************************************
 
 //Constructores: Hormiga ******************************************
@@ -98,7 +133,7 @@ Hormiga::Hormiga(
 bool Hormiga::testColor(){
 	int *colorL = RGB->leerColor();
 	
-	//PRINT_COLOR(colorL);
+	PRINT_COLOR(colorL);
 
 	if(RGB->compColor(colorL, color, colorTol)){
 		estado = ENCONTRADA;
@@ -145,6 +180,14 @@ void Hormiga::calHormiga(){
 						break;
 					case ULTRASOUNDCORR_SET:
 						factorCorr = cmd.toFloat();
+						Serial.print("Correccion de ultrasonido: ");
+						Serial.println(factorCorr);
+						break;
+					case ULTRASOUND_TEST:
+						while(!(Serial.available() > 0)){
+							PRINT_ULTRAS(Ultrasonico());
+							delay(500);
+						}
 						break;
 					case ULTRASOUND_SET:
 						dist = Ultrasonico();
@@ -169,7 +212,7 @@ void Hormiga::calHormiga(){
 						PRINT_COLOR(color);
 						break;
 					case COLORTOL_SET:
-						toleranciaColor(cmdCode >> CMD_SET_SIZE);
+						toleranciaColor(cmd.toInt());
 
 						Serial.print("tolerancia: ");
 						Serial.println(getColorTol());
@@ -188,6 +231,13 @@ void Hormiga::calHormiga(){
 						setColor(RGB->leerColor());
 						PRINT_COLOR(color);
 						break;
+
+					#ifdef CMD_HELP_MSG
+					case CMD_HELP:
+						Serial.println(CMD_HELP_MSG);
+						return;
+					#endif
+
 					case CMD_END:
 						Serial.println("Calibracion finalizada");
 						return;
@@ -222,10 +272,12 @@ int Hormiga::calCmdParser(String* cmd){
 			else if(cmd->equals("--"))
 				retval = ULTRASOUNDCORR_DEC;
 			else
-				retval = ULTRASOUNDCORR_SET + (cmd->toInt() << CMD_SET_SIZE);
+				retval = ULTRASOUNDCORR_SET;
 		}
 		else if(cmd->equals("s"))
 			retval = ULTRASOUND_SET;
+		else if(cmd->equals("p"))
+			retval = ULTRASOUND_TEST;
 	}
 	else if(cmd->startsWith("color ")){
 		cmd->remove(0, 5);
@@ -242,7 +294,7 @@ int Hormiga::calCmdParser(String* cmd){
 			else if(cmd->equals("--"))
 				retval = COLORTOL_DEC;
 			else{
-				retval = COLORTOL_SET + (cmd->toInt() << CMD_SET_SIZE);
+				retval = COLORTOL_SET;
 				//Serial.println(retval, HEX);
 			}
 		}
@@ -253,6 +305,11 @@ int Hormiga::calCmdParser(String* cmd){
 	}
 	else if(cmd->equals("fin"))
 		retval = CMD_END;
+
+	#ifdef CMD_HELP_MSG
+	else if(cmd->equals("?") || cmd->equals("help") || cmd->equals("ayuda"))
+		retval = CMD_HELP;
+	#endif
 
 	return retval;
 }
@@ -406,11 +463,12 @@ void Hormiga::seguir(){
 void Hormiga::rotarFrac(float n){ despl->despInv( (float)ppg * (float)n ); }
 
 //Funciones de asignaci?****************************************************
-void Hormiga::setEstado   ( byte   e ){ estado        = e; } //establece el estado actual de trabajo
-void Hormiga::setVectorMod( double m ){ vectorDesp[0] = m; } //asigna el m?ulo del vector de desplazamiento
-void Hormiga::setVectorAng( double a ){ vectorDesp[1] = a; } //asigna el ?gulo del vector de desplazamiento
-void Hormiga::setUltAng   ( double a ){ ultAngulo     = a; } //asigna el ?gulo de la ?ltima rotaci?
-void Hormiga::setDist     ( float  d ){ dist          = d; } //establece la distancia a la que se detectan obstaculos
+void Hormiga::setEstado      ( byte   e ){ estado        = e; } //establece el estado actual de trabajo
+void Hormiga::setVectorMod   ( double m ){ vectorDesp[0] = m; } //asigna el m?ulo del vector de desplazamiento
+void Hormiga::setVectorAng   ( double a ){ vectorDesp[1] = a; } //asigna el ?gulo del vector de desplazamiento
+void Hormiga::setUltAng      ( double a ){ ultAngulo     = a; } //asigna el ?gulo de la ?ltima rotaci?
+void Hormiga::setDist        ( float  d ){ dist          = d; } //establece la distancia a la que se detectan obstaculos
+void Hormiga::setUltrasCorr  ( float  c ){ factorCorr    = c; } //establece el factor de corrección del ultrasonido
 void Hormiga::toleranciaColor( int colorTol ){ this->colorTol = colorTol; } //establece la tolerancia para el sensor de color (por defecto = +-2)
 
 //establece el color a comparar

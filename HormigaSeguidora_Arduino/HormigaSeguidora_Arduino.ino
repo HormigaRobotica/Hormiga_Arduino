@@ -39,6 +39,7 @@ void setup() {
 	motores.setEnPin(1, enPin);
 
 	hormiga.enableIR();
+	hormiga.setUltrasCorr(1.45);
 	hormiga.calHormiga();
 }
 
