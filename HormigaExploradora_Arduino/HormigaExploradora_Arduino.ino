@@ -37,12 +37,11 @@ void setup() {
 	Serial.begin(9600);
 
 	hormiga.calHormiga();
+	hormiga.setEstado(ESPERANDO);
 }
 
 void loop() {
 	
 	hormiga.trabajar();
 	Serial.println(hormiga.getEstado());
-
-	delay(1000);
 }

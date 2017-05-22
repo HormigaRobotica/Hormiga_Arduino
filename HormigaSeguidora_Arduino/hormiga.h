@@ -36,7 +36,6 @@ class Hormiga {
 	public:
 		bool desplazar (); //se desplaza una distancia definida a menos que exista un obstaculo
 		bool testColor (); //lee y compara el color actual con el color en memoria
-		int  getPpg    (); //retorna el n?mero de pasos por giro de la hormiga
 
 		double calcAngRotacion(int pasos); //dado el numero de pasos retorna el ángulo de rotación
 
@@ -100,7 +99,6 @@ class Hormiga {
 		
 		int color[3]; //color a considerar como "azucar"
 		int colorTol; //tolerancia del color
-		int ppg;      //pasos por giro de la hormiga
 
 		float  dist;          //distancia a la cual se evitan los obstaculos
 		float  factorCorr;    //factor de corrección del ultrasónico

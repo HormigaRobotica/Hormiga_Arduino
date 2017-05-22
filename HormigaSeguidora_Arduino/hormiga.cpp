@@ -12,7 +12,7 @@
 #include "hormiga.h"
 
 #define ROTAC_FRAC 1/2 //fracci? de vuelta por desplazamiento
-#define TOL_COLOR 35 //tolerancia inicial en los valores de color
+#define TOL_COLOR 25 //tolerancia inicial en los valores de color
 #define testDist(u, d) ((u) <= (d) && (u) >= 0)
 
 //codigos para comandos de calibracion *****************************************
@@ -32,7 +32,7 @@
 #define CMD_END 15
 
 //CONFIGURACION PARA CALIBRACION
-#define TEST_DIST_CONTA 4
+#define TEST_DIST_CONTA 4.0
 
 #define CMD_SET_SIZE 4
 #define CMD_SET_MAX 15
@@ -92,8 +92,6 @@ Hormiga::Hormiga(
 	pinMode(echoPin, INPUT);
 
 	setColor(colorR, colorG, colorB);
-
-	ppg = perimRobot * despl->getRatio() / perimRueda;/*112*/
 	
 	mem.conta = 1;
 	mem.overfVal = mem.datos[0][1] = mem.datos[0][0] = 0;
@@ -118,8 +116,6 @@ Hormiga::Hormiga(
 {
 	pinMode(trigPin, OUTPUT);
 	pinMode(echoPin, INPUT);
-
-	ppg = perimRobot * despl->getRatio() / perimRueda;/*112*/
 
 	mem.conta = 1;
 	mem.overfVal = mem.datos[0][1] = mem.datos[0][0] = 0;
@@ -194,19 +190,19 @@ void Hormiga::calHormiga(){
 						PRINT_ULTRAS(dist);
 						break;
 					case COLORTOL_INC:
-						toleranciaColor(getColorTol() + 1);
+						toleranciaColor(colorTol + 1);
 
 						Serial.print("tolerancia: ");
-						Serial.println(getColorTol());
+						Serial.println(colorTol);
 						Serial.print((testColor()) ? "Color Encontrado!! " : "NO es el Color ");
 						Serial.print("Ref: ");
 						PRINT_COLOR(color);
 						break;
 					case COLORTOL_DEC:
-						toleranciaColor(getColorTol() - 1);
+						toleranciaColor(colorTol - 1);
 
 						Serial.print("tolerancia: ");
-						Serial.println(getColorTol());
+						Serial.println(colorTol);
 						Serial.print((testColor()) ? "Color Encontrado!! " : "NO es el Color ");
 						Serial.print("Ref: ");
 						PRINT_COLOR(color);
@@ -215,7 +211,7 @@ void Hormiga::calHormiga(){
 						toleranciaColor(cmd.toInt());
 
 						Serial.print("tolerancia: ");
-						Serial.println(getColorTol());
+						Serial.println(colorTol);
 						Serial.print((testColor()) ? "Color Encontrado!! " : "NO es el Color ");
 						Serial.print("Ref: ");
 						PRINT_COLOR(color);
@@ -368,33 +364,6 @@ bool Hormiga::desplazar(){
 	float us;
 
 	ultAngulo = normalizeAngle(escogeDir());
-	
-	//rota una distancia definida siempre que encuentre un obst?ulo
-	us = Ultrasonico();
-	while(testDist(us, dist)){
-		for (int j = 0; j < TEST_DIST_CONTA; ++j){
-			if (testColor()){
-				addVectorsPolar<double>(vectorDesp[0], vectorDesp[1], 0, ultAngulo, vectorDesp, vectorDesp + 1);
-				return true;
-			}
-
-			float d = dist / TEST_DIST_CONTA;
-			int val  = (despl->getRatio() * d) / getPerimRueda();
-
-			despl->desp(val);
-
-			if(j < (TEST_DIST_CONTA - 1))
-				vectorDesp[0] += d;
-			else{
-				despl->desp(-(val * j));
-				vectorDesp[0] -= d *  j;
-			}
-		}
-
-		rotarFrac(1.0/8.0);
-		ultAngulo = normalizeAngle(ultAngulo + PI/4);
-		us = Ultrasonico();
-	}
 
 	//se desplaza una distancia definida (o hasta encontrar un obstaculo)
 	for (i = 0; i < despl->getRatio() * ROTAC_FRAC; ++i){
@@ -402,12 +371,13 @@ bool Hormiga::desplazar(){
 		if(testDist(us, dist)){
 			for (int j = 0; j < TEST_DIST_CONTA; ++j){
 				if (testColor()){
-					addVectorsPolar<double>(vectorDesp[0], vectorDesp[1], perimRueda * (i/despl->getRatio()), ultAngulo, vectorDesp, vectorDesp + 1);
+					addVectorsPolar<double>(vectorDesp[0], vectorDesp[1], (i * perimRueda / despl->getRatio()), ultAngulo, vectorDesp, vectorDesp + 1);
+					vectorDesp[1] = normalizeAngle(vectorDesp[1]);
 					return true;
 				}
 
 				float d = dist / TEST_DIST_CONTA;
-				int val  = (despl->getRatio() * d) / getPerimRueda();
+				int val = (despl->getRatio() * d) / perimRueda;
 
 				despl->desp(val);
 				
@@ -416,15 +386,18 @@ bool Hormiga::desplazar(){
 				else{
 					despl->desp(-(val * j));
 					vectorDesp[0] -= d *  j;
+
+					rotarFrac(0.5);
+					ultAngulo += PI;
 				}
 			}
-
 			break;
 		}
 		despl->desp(1);
 	}
 
-	addVectorsPolar<double>(vectorDesp[0], vectorDesp[1], perimRueda * (i/despl->getRatio()), ultAngulo, vectorDesp, vectorDesp + 1);
+	addVectorsPolar<double>(vectorDesp[0], vectorDesp[1], (i * perimRueda / despl->getRatio()), ultAngulo, vectorDesp, vectorDesp + 1);
+	vectorDesp[1] = normalizeAngle(vectorDesp[1]);
 
 	if(mem.conta < HORMIGA_MEM){
 		mem.datos[mem.conta][0] = vectorDesp[0];
@@ -443,7 +416,11 @@ bool Hormiga::desplazar(){
 //retorna hacia la posici? original
 void Hormiga::retornar(){
 	rotarFrac  ( 0.5 + (ultAngulo / (2 * PI)) );
-	despl->desp( getDespl()->getRatio() * vectorDesp[0] / perimRueda );
+	int dist = despl->getRatio() * vectorDesp[0] / perimRueda;
+
+	for (int i = 0; i < dist || testDist(Ultrasonico(), dist); ++i)
+		despl->desp(1);
+
 	setEstado  (COMUNICANDO);
 }
 
@@ -451,12 +428,12 @@ void Hormiga::retornar(){
 void Hormiga::seguir(){
 	float us;
 
-	rotarFrac  ( (float)getVector()[1] / (2 * PI) );
+	rotarFrac( (float)vectorDesp[1] / (2 * PI) );
 
 	/*Nota: Agregar an?isis de color*/
 	us = Ultrasonico();
 	while(!testDist(us, dist)){
-		getDespl()->desp(1);
+		despl->desp(1);
 		us = Ultrasonico();
 	}
 	
@@ -464,7 +441,7 @@ void Hormiga::seguir(){
 }
 
 //rota la hormiga una fracci? de giro dada por "n" Ej: n=0.5 (media vuelta)
-void Hormiga::rotarFrac(float n){ despl->despInv( (float)ppg * (float)n ); }
+void Hormiga::rotarFrac(float n){ despl->despInv( n * despl->getRatio() * perimRobot / perimRueda ); }
 
 //Funciones de asignaci?****************************************************
 void Hormiga::setEstado      ( byte   e ){ estado        = e; } //establece el estado actual de trabajo
@@ -493,7 +470,6 @@ void Hormiga::setVector(double m, double a){
 //Funciones para valores en variables****************************************
 byte       Hormiga::getEstado    (){ return estado;     } //retorna el estado de trabajo actual
 int        Hormiga::getColorTol  (){ return colorTol;    } //retorna el valor de tolerancia para las mediciones de color
-int        Hormiga::getPpg       (){ return ppg;        } //retorna el n?mero de pasos por giro de la hormiga
 float      Hormiga::getPerimRueda(){ return perimRueda; } //retorna el perimetro de las ruedas
 float      Hormiga::getPerimRobot(){ return perimRobot; } //retorna el perimetro de la hormiga
 float      Hormiga::getDist      (){ return dist;       } //retorna la distancia a la cual se detectan obstaculos

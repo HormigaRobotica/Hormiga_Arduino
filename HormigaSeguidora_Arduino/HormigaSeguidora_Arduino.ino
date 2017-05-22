@@ -41,11 +41,10 @@ void setup() {
 	hormiga.enableIR();
 	hormiga.setUltrasCorr(1.45);
 	hormiga.calHormiga();
+	hormiga.setEstado(ESPERANDO);
 }
 
 void loop() {
 	hormiga.trabajar();
 	Serial.println(hormiga.getEstado());
-
-	delay(100);
 }
